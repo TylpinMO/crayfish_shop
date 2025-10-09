@@ -1,417 +1,459 @@
-// Mobile Navigation Toggle
-const navToggle = document.getElementById('nav-toggle')
-const navMenu = document.getElementById('nav-menu')
+// Shopping Cart System
+class ShoppingCart {
+	constructor() {
+		this.items = JSON.parse(localStorage.getItem('cart')) || []
+		this.deliveryFee = 300
 
-navToggle.addEventListener('click', () => {
-	navMenu.classList.toggle('active')
-	navToggle.classList.toggle('active')
-})
+		// Initialize when DOM is ready
+		if (document.readyState === 'loading') {
+			document.addEventListener('DOMContentLoaded', () => this.init())
+		} else {
+			this.init()
+		}
+	}
 
-// Close mobile menu when clicking on a link
-document.querySelectorAll('.nav-link').forEach(link => {
-	link.addEventListener('click', () => {
-		navMenu.classList.remove('active')
-		navToggle.classList.remove('active')
-	})
-})
+	init() {
+		this.bindEvents()
+		this.updateCartUI()
+	}
 
-// Smooth scrolling for navigation links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-	anchor.addEventListener('click', function (e) {
-		e.preventDefault()
-		const target = document.querySelector(this.getAttribute('href'))
-		if (target) {
-			const offsetTop =
-				target.offsetTop - (this.getAttribute('href') === '#home' ? 0 : 70)
-			window.scrollTo({
-				top: offsetTop,
-				behavior: 'smooth',
+	bindEvents() {
+		// Cart toggle
+		const cartToggle = document.getElementById('cart-toggle')
+		const closeCart = document.getElementById('close-cart')
+		const cartOverlay = document.getElementById('cart-overlay')
+		const checkoutBtn = document.getElementById('checkout-btn')
+
+		if (cartToggle) cartToggle.addEventListener('click', () => this.openCart())
+		if (closeCart) closeCart.addEventListener('click', () => this.closeCart())
+		if (cartOverlay)
+			cartOverlay.addEventListener('click', () => this.closeCart())
+		if (checkoutBtn)
+			checkoutBtn.addEventListener('click', () => this.checkout())
+	}
+
+	openCart() {
+		document.getElementById('cart-sidebar').classList.add('open')
+		document.getElementById('cart-overlay').classList.add('active')
+		document.body.classList.add('cart-open')
+	}
+
+	closeCart() {
+		document.getElementById('cart-sidebar').classList.remove('open')
+		document.getElementById('cart-overlay').classList.remove('active')
+		document.body.classList.remove('cart-open')
+	}
+
+	addItem(product, quantity = 1) {
+		const existingItem = this.items.find(item => item.id === product.id)
+
+		if (existingItem) {
+			existingItem.quantity += quantity
+		} else {
+			this.items.push({
+				...product,
+				quantity: quantity,
 			})
 		}
-	})
-})
 
-// Navbar background change on scroll
-window.addEventListener('scroll', () => {
-	const navbar = document.querySelector('.navbar')
-	if (window.scrollY > 50) {
-		navbar.style.background = 'rgba(255, 255, 255, 0.98)'
-		navbar.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.1)'
-	} else {
-		navbar.style.background = 'rgba(255, 255, 255, 0.95)'
-		navbar.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1)'
+		this.saveCart()
+		this.updateCartUI()
+		this.showNotification(`${product.name} добавлен в корзину`, 'success')
 	}
-})
 
-// Form submission
-document
-	.querySelector('.contact-form form')
-	.addEventListener('submit', function (e) {
+	removeItem(productId) {
+		this.items = this.items.filter(item => item.id !== productId)
+		this.saveCart()
+		this.updateCartUI()
+		this.showNotification('Товар удален из корзины', 'info')
+	}
+
+	updateQuantity(productId, quantity) {
+		if (quantity <= 0) {
+			this.removeItem(productId)
+			return
+		}
+
+		const item = this.items.find(item => item.id === productId)
+		if (item) {
+			item.quantity = quantity
+			this.saveCart()
+			this.updateCartUI()
+		}
+	}
+
+	getTotal() {
+		return this.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+	}
+
+	getTotalWithDelivery() {
+		const subtotal = this.getTotal()
+		return subtotal > 0 ? subtotal + this.deliveryFee : 0
+	}
+
+	saveCart() {
+		localStorage.setItem('cart', JSON.stringify(this.items))
+	}
+
+	updateCartUI() {
+		// Update cart count badge
+		const cartCount = document.getElementById('cart-count')
+		const totalItems = this.items.reduce((sum, item) => sum + item.quantity, 0)
+		cartCount.textContent = totalItems
+		cartCount.classList.toggle('hidden', totalItems === 0)
+
+		// Update cart items display
+		this.renderCartItems()
+
+		// Update totals
+		this.updateCartTotals()
+
+		// Show/hide empty state
+		const cartEmpty = document.getElementById('cart-empty')
+		const cartItems = document.getElementById('cart-items')
+		const isEmpty = this.items.length === 0
+
+		if (cartEmpty && cartItems) {
+			cartEmpty.classList.toggle('hidden', !isEmpty)
+			cartItems.classList.toggle('hidden', isEmpty)
+		}
+	}
+
+	renderCartItems() {
+		const cartItemsContainer = document.getElementById('cart-items')
+		if (!cartItemsContainer) return
+
+		cartItemsContainer.innerHTML = ''
+
+		this.items.forEach(item => {
+			const cartItemHTML = `
+				<div class="cart-item" data-id="${item.id}">
+					<img src="${item.image}" alt="${item.name}" class="cart-item-image">
+					<div class="cart-item-info">
+						<div class="cart-item-name">${item.name}</div>
+						<div class="cart-item-price">${item.price}₽/кг</div>
+						<div class="cart-item-controls">
+							<button class="quantity-btn" onclick="cart.updateQuantity('${item.id}', ${
+				item.quantity - 1
+			})">
+								<i class="fas fa-minus"></i>
+							</button>
+							<span class="quantity-display">${item.quantity}</span>
+							<button class="quantity-btn" onclick="cart.updateQuantity('${item.id}', ${
+				item.quantity + 1
+			})">
+								<i class="fas fa-plus"></i>
+							</button>
+							<button class="remove-item" onclick="cart.removeItem('${item.id}')">
+								<i class="fas fa-trash"></i>
+							</button>
+						</div>
+					</div>
+				</div>
+			`
+			cartItemsContainer.insertAdjacentHTML('beforeend', cartItemHTML)
+		})
+	}
+
+	updateCartTotals() {
+		const subtotalElement = document.getElementById('cart-subtotal')
+		const deliveryElement = document.getElementById('cart-delivery')
+		const totalElement = document.getElementById('cart-total')
+
+		const subtotal = this.getTotal()
+		const total = this.getTotalWithDelivery()
+
+		if (subtotalElement) subtotalElement.textContent = `${subtotal}₽`
+		if (deliveryElement)
+			deliveryElement.textContent = subtotal > 0 ? `${this.deliveryFee}₽` : '0₽'
+		if (totalElement) totalElement.textContent = `${total}₽`
+	}
+
+	checkout() {
+		if (this.items.length === 0) {
+			this.showNotification('Корзина пуста!', 'warning')
+			return
+		}
+
+		const total = this.getTotalWithDelivery()
+		this.showNotification(
+			`Заказ на сумму ${total}₽ оформлен! Мы свяжемся с вами в ближайшее время.`,
+			'success'
+		)
+
+		// Clear cart
+		this.items = []
+		this.saveCart()
+		this.updateCartUI()
+		this.closeCart()
+	}
+
+	showNotification(message, type = 'info') {
+		const notification = document.createElement('div')
+		notification.className = `notification notification-${type}`
+		notification.textContent = message
+		notification.style.cssText = `
+			position: fixed;
+			top: 100px;
+			right: 20px;
+			background: ${
+				type === 'success'
+					? '#38a169'
+					: type === 'error'
+					? '#e74c3c'
+					: type === 'warning'
+					? '#f39c12'
+					: '#3498db'
+			};
+			color: white;
+			padding: 15px 25px;
+			border-radius: 25px;
+			box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+			z-index: 1002;
+			opacity: 0;
+			transform: translateX(100%);
+			transition: all 0.3s ease;
+			max-width: 300px;
+		`
+
+		document.body.appendChild(notification)
+
+		// Animate in
+		setTimeout(() => {
+			notification.style.opacity = '1'
+			notification.style.transform = 'translateX(0)'
+		}, 100)
+
+		// Remove after delay
+		setTimeout(() => {
+			notification.style.opacity = '0'
+			notification.style.transform = 'translateX(100%)'
+			setTimeout(() => {
+				if (notification.parentNode) {
+					notification.parentNode.removeChild(notification)
+				}
+			}, 300)
+		}, 3000)
+	}
+}
+
+// Initialize cart
+const cart = new ShoppingCart()
+
+// Gallery functionality
+function initGallery() {
+	const products = document.querySelectorAll('.product-card')
+
+	products.forEach(product => {
+		const prevBtn = product.querySelector('.gallery-btn.prev')
+		const nextBtn = product.querySelector('.gallery-btn.next')
+		const images = product.querySelectorAll('.product-image')
+		const indicators = product.querySelectorAll('.gallery-indicator')
+		let currentIndex = 0
+
+		if (images.length === 0) return
+
+		function showImage(index) {
+			// Hide all images
+			images.forEach(img => {
+				img.classList.remove('active')
+				img.style.display = 'none'
+			})
+
+			if (indicators.length > 0) {
+				indicators.forEach(indicator => indicator.classList.remove('active'))
+			}
+
+			// Show current image
+			if (images[index]) {
+				images[index].classList.add('active')
+				images[index].style.display = 'block'
+
+				if (indicators[index]) {
+					indicators[index].classList.add('active')
+				}
+			}
+		}
+
+		function nextImage() {
+			currentIndex = (currentIndex + 1) % images.length
+			showImage(currentIndex)
+		}
+
+		function prevImage() {
+			currentIndex = (currentIndex - 1 + images.length) % images.length
+			showImage(currentIndex)
+		}
+
+		// Event listeners
+		if (nextBtn) nextBtn.addEventListener('click', nextImage)
+		if (prevBtn) prevBtn.addEventListener('click', prevImage)
+
+		// Indicator clicks
+		indicators.forEach((indicator, index) => {
+			indicator.addEventListener('click', () => {
+				currentIndex = index
+				showImage(currentIndex)
+			})
+		})
+
+		// Auto-play
+		const autoPlayInterval = setInterval(nextImage, 5000)
+
+		// Pause auto-play on hover
+		product.addEventListener('mouseenter', () =>
+			clearInterval(autoPlayInterval)
+		)
+
+		// Initialize first image
+		showImage(0)
+	})
+}
+
+// Navigation functionality
+function initNavigation() {
+	const navToggle = document.querySelector('.nav-toggle')
+	const navMenu = document.querySelector('.nav-menu')
+
+	if (navToggle && navMenu) {
+		navToggle.addEventListener('click', () => {
+			navMenu.classList.toggle('active')
+			navToggle.classList.toggle('active')
+		})
+	}
+
+	// Smooth scrolling for navigation links
+	document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+		anchor.addEventListener('click', function (e) {
+			e.preventDefault()
+			const target = document.querySelector(this.getAttribute('href'))
+			if (target) {
+				target.scrollIntoView({
+					behavior: 'smooth',
+					block: 'start',
+				})
+				// Close mobile menu if open
+				navMenu.classList.remove('active')
+				navToggle.classList.remove('active')
+			}
+		})
+	})
+}
+
+// Contact form functionality
+function initContactForm() {
+	const contactForm = document.getElementById('contact-form')
+	if (!contactForm) return
+
+	contactForm.addEventListener('submit', function (e) {
 		e.preventDefault()
 
-		// Get form data
 		const formData = new FormData(this)
-		const name = this.querySelector('input[type="text"]').value
-		const phone = this.querySelector('input[type="tel"]').value
-		const email = this.querySelector('input[type="email"]').value
-		const message = this.querySelector('textarea').value
+		const name = formData.get('name')
+		const phone = formData.get('phone')
+		const message = formData.get('message')
 
 		// Simple validation
-		if (!name || !phone || !message) {
-			alert('Пожалуйста, заполните все обязательные поля')
+		if (!name || !phone) {
+			cart.showNotification(
+				'Пожалуйста, заполните все обязательные поля',
+				'warning'
+			)
 			return
 		}
 
 		// Simulate form submission
-		const submitBtn = this.querySelector('button[type="submit"]')
-		const originalText = submitBtn.textContent
-		submitBtn.textContent = 'Отправляется...'
-		submitBtn.disabled = true
+		cart.showNotification(
+			'Спасибо за обращение! Мы свяжемся с вами в ближайшее время.',
+			'success'
+		)
 
-		setTimeout(() => {
-			alert('Спасибо за заявку! Мы свяжемся с вами в ближайшее время.')
-			this.reset()
-			submitBtn.textContent = originalText
-			submitBtn.disabled = false
-		}, 2000)
-	})
-
-// Add to cart buttons
-document.querySelectorAll('.btn-add-to-cart').forEach(button => {
-	button.addEventListener('click', function () {
-		const productCard = this.closest('.product-card')
-		const productName = productCard.querySelector('h3').textContent
-
-		// Animation effect
-		this.textContent = 'Добавлено!'
-		this.style.background = '#28a745'
-
-		setTimeout(() => {
-			this.textContent = 'Заказать'
-			this.style.background = ''
-		}, 2000)
-
-		// You could add actual cart functionality here
-		console.log(`Добавлен в корзину: ${productName}`)
-	})
-})
-
-// Intersection Observer for animations
-const observerOptions = {
-	threshold: 0.1,
-	rootMargin: '0px 0px -50px 0px',
-}
-
-const observer = new IntersectionObserver(entries => {
-	entries.forEach(entry => {
-		if (entry.isIntersecting) {
-			entry.target.style.opacity = '1'
-			entry.target.style.transform = 'translateY(0)'
-		}
-	})
-}, observerOptions)
-
-// Observe elements for scroll animations
-document
-	.querySelectorAll('.about-card, .product-card, .service-item')
-	.forEach(el => {
-		el.style.opacity = '0'
-		el.style.transform = 'translateY(30px)'
-		el.style.transition = 'opacity 0.6s ease, transform 0.6s ease'
-		observer.observe(el)
-	})
-
-// Counter animation for stats (if you want to add some stats)
-function animateCounter(element, target, duration = 2000) {
-	let start = 0
-	const increment = target / (duration / 16)
-
-	const timer = setInterval(() => {
-		start += increment
-		element.textContent = Math.floor(start)
-
-		if (start >= target) {
-			element.textContent = target
-			clearInterval(timer)
-		}
-	}, 16)
-}
-
-// Phone number formatting
-document.querySelectorAll('input[type="tel"]').forEach(input => {
-	input.addEventListener('input', function (e) {
-		let value = e.target.value.replace(/\D/g, '')
-		if (value.length > 0) {
-			if (value.length <= 1) {
-				value = '+7 (' + value
-			} else if (value.length <= 4) {
-				value = '+7 (' + value.substring(1)
-			} else if (value.length <= 7) {
-				value = '+7 (' + value.substring(1, 4) + ') ' + value.substring(4)
-			} else if (value.length <= 9) {
-				value =
-					'+7 (' +
-					value.substring(1, 4) +
-					') ' +
-					value.substring(4, 7) +
-					'-' +
-					value.substring(7)
-			} else {
-				value =
-					'+7 (' +
-					value.substring(1, 4) +
-					') ' +
-					value.substring(4, 7) +
-					'-' +
-					value.substring(7, 9) +
-					'-' +
-					value.substring(9, 11)
-			}
-		}
-		e.target.value = value
-	})
-})
-
-// Parallax effect for hero section
-window.addEventListener('scroll', () => {
-	const scrolled = window.pageYOffset
-	const parallax = document.querySelector('.hero')
-	const speed = scrolled * 0.5
-
-	if (parallax) {
-		parallax.style.transform = `translateY(${speed}px)`
-	}
-})
-
-// Loading animation
-window.addEventListener('load', () => {
-	document.body.classList.add('loaded')
-})
-
-// Back to top button (optional)
-const backToTopButton = document.createElement('button')
-backToTopButton.innerHTML = '<i class="fas fa-arrow-up"></i>'
-backToTopButton.classList.add('back-to-top')
-backToTopButton.style.cssText = `
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-    z-index: 1000;
-    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
-`
-
-document.body.appendChild(backToTopButton)
-
-window.addEventListener('scroll', () => {
-	if (window.pageYOffset > 300) {
-		backToTopButton.style.opacity = '1'
-		backToTopButton.style.visibility = 'visible'
-	} else {
-		backToTopButton.style.opacity = '0'
-		backToTopButton.style.visibility = 'hidden'
-	}
-})
-
-backToTopButton.addEventListener('click', () => {
-	window.scrollTo({
-		top: 0,
-		behavior: 'smooth',
-	})
-})
-
-// Add hover effects to social links
-document.querySelectorAll('.social-links a').forEach(link => {
-	link.addEventListener('mouseenter', function () {
-		this.style.transform = 'translateY(-3px) scale(1.1)'
-	})
-
-	link.addEventListener('mouseleave', function () {
-		this.style.transform = 'translateY(0) scale(1)'
-	})
-})
-
-// Initialize tooltips (if you want to add some)
-function initTooltips() {
-	const tooltipElements = document.querySelectorAll('[data-tooltip]')
-
-	tooltipElements.forEach(element => {
-		element.addEventListener('mouseenter', function () {
-			const tooltip = document.createElement('div')
-			tooltip.className = 'tooltip'
-			tooltip.textContent = this.getAttribute('data-tooltip')
-			tooltip.style.cssText = `
-                position: absolute;
-                background: rgba(0, 0, 0, 0.8);
-                color: white;
-                padding: 5px 10px;
-                border-radius: 4px;
-                font-size: 12px;
-                white-space: nowrap;
-                z-index: 1001;
-                pointer-events: none;
-            `
-			document.body.appendChild(tooltip)
-
-			const rect = this.getBoundingClientRect()
-			tooltip.style.left =
-				rect.left + rect.width / 2 - tooltip.offsetWidth / 2 + 'px'
-			tooltip.style.top = rect.top - tooltip.offsetHeight - 5 + 'px'
-		})
-
-		element.addEventListener('mouseleave', function () {
-			const tooltip = document.querySelector('.tooltip')
-			if (tooltip) {
-				tooltip.remove()
-			}
-		})
+		// Reset form
+		this.reset()
 	})
 }
-
-// Gallery functionality
-function changeImage(button, direction) {
-	const gallery = button.closest('.product-image-gallery')
-	const images = gallery.querySelectorAll('.product-image')
-	const dots = gallery.querySelectorAll('.dot')
-
-	let currentIndex = Array.from(images).findIndex(img =>
-		img.classList.contains('active')
-	)
-	let newIndex = currentIndex + direction
-
-	if (newIndex >= images.length) newIndex = 0
-	if (newIndex < 0) newIndex = images.length - 1
-
-	// Remove active classes
-	images[currentIndex].classList.remove('active')
-	dots[currentIndex].classList.remove('active')
-
-	// Add active classes
-	images[newIndex].classList.add('active')
-	dots[newIndex].classList.add('active')
-}
-
-function currentImage(dot, n) {
-	const gallery = dot.closest('.product-image-gallery')
-	const images = gallery.querySelectorAll('.product-image')
-	const dots = gallery.querySelectorAll('.dot')
-
-	// Remove all active classes
-	images.forEach(img => img.classList.remove('active'))
-	dots.forEach(d => d.classList.remove('active'))
-
-	// Add active classes to selected
-	images[n - 1].classList.add('active')
-	dots[n - 1].classList.add('active')
-}
-
-// Initialize gallery - make first image active in each gallery
-document.addEventListener('DOMContentLoaded', function () {
-	document.querySelectorAll('.product-image-gallery').forEach(gallery => {
-		const firstImage = gallery.querySelector('.product-image')
-		const firstDot = gallery.querySelector('.dot')
-		if (firstImage) firstImage.classList.add('active')
-		if (firstDot) firstDot.classList.add('active')
-	})
-})
-
-// Auto-slide gallery every 5 seconds
-setInterval(() => {
-	document.querySelectorAll('.product-image-gallery').forEach(gallery => {
-		const nextBtn = gallery.querySelector('.gallery-btn.next')
-		if (nextBtn) {
-			changeImage(nextBtn, 1)
-		}
-	})
-}, 5000)
 
 // Enhanced add to cart functionality
-document.querySelectorAll('.btn-add-to-cart').forEach(button => {
-	button.addEventListener('click', function () {
-		const productCard = this.closest('.product-card')
-		const productName = productCard.querySelector('h3').textContent
-		const productPrice = productCard.querySelector('.product-price').textContent
+function initAddToCart() {
+	document.querySelectorAll('.btn-add-to-cart').forEach(button => {
+		button.addEventListener('click', function () {
+			const productCard = this.closest('.product-card')
+			const productName = productCard.querySelector('h3').textContent
+			const productPriceText =
+				productCard.querySelector('.product-price').textContent
+			const productImages = productCard.querySelectorAll('.product-image')
+			const productImage = productImages.length > 0 ? productImages[0].src : ''
 
-		// Animation effect
-		const originalText = this.textContent
-		this.textContent = 'Добавлено!'
-		this.style.background = '#27ae60'
+			// Extract price number from text (e.g., "от 800₽/кг" -> 800)
+			const priceMatch = productPriceText.match(/(\d+)/)
+			const price = priceMatch ? parseInt(priceMatch[1]) : 0
 
-		// Show notification
-		showNotification(`${productName} добавлен в корзину`, 'success')
+			// Create product object
+			const product = {
+				id: productName.toLowerCase().replace(/\s+/g, '-'),
+				name: productName,
+				price: price,
+				image: productImage,
+			}
 
-		setTimeout(() => {
-			this.textContent = originalText
-			this.style.background = ''
-		}, 2000)
+			// Add to cart
+			cart.addItem(product)
 
-		console.log(`Добавлен в корзину: ${productName} - ${productPrice}`)
+			// Animation effect
+			const originalText = this.textContent
+			this.textContent = 'Добавлено!'
+			this.style.background = '#27ae60'
+
+			setTimeout(() => {
+				this.textContent = originalText
+				this.style.background = ''
+			}, 2000)
+		})
 	})
-})
 
-// Quick order functionality
-document.querySelectorAll('.btn-quick-order').forEach(button => {
-	button.addEventListener('click', function () {
-		const productCard = this.closest('.product-card')
-		const productName = productCard.querySelector('h3').textContent
+	// Quick order functionality
+	document.querySelectorAll('.btn-quick-order').forEach(button => {
+		button.addEventListener('click', function () {
+			const productCard = this.closest('.product-card')
+			const productName = productCard.querySelector('h3').textContent
+			const productPriceText =
+				productCard.querySelector('.product-price').textContent
+			const productImages = productCard.querySelectorAll('.product-image')
+			const productImage = productImages.length > 0 ? productImages[0].src : ''
 
-		// Scroll to contact form and pre-fill message
-		const contactForm = document.querySelector('.contact-form textarea')
-		if (contactForm) {
-			contactForm.value = `Хочу заказать: ${productName}`
-			document.querySelector('#contact').scrollIntoView({ behavior: 'smooth' })
-		}
+			// Extract price number from text
+			const priceMatch = productPriceText.match(/(\d+)/)
+			const price = priceMatch ? parseInt(priceMatch[1]) : 0
 
-		showNotification('Форма заказа подготовлена', 'info')
+			// Create product object
+			const product = {
+				id: productName.toLowerCase().replace(/\s+/g, '-'),
+				name: productName,
+				price: price,
+				image: productImage,
+			}
+
+			// Add to cart and open it
+			cart.addItem(product)
+			cart.openCart()
+
+			// Animation effect
+			const originalText = this.textContent
+			this.textContent = 'Добавлено!'
+			this.style.background = '#27ae60'
+
+			setTimeout(() => {
+				this.textContent = originalText
+				this.style.background = ''
+			}, 2000)
+		})
 	})
-})
-
-// Notification system
-function showNotification(message, type = 'info') {
-	const notification = document.createElement('div')
-	notification.className = `notification notification-${type}`
-	notification.textContent = message
-	notification.style.cssText = `
-		position: fixed;
-		top: 100px;
-		right: 20px;
-		background: ${
-			type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#3498db'
-		};
-		color: white;
-		padding: 15px 25px;
-		border-radius: 25px;
-		box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-		z-index: 1001;
-		opacity: 0;
-		transform: translateX(100%);
-		transition: all 0.3s ease;
-	`
-
-	document.body.appendChild(notification)
-
-	// Show notification
-	setTimeout(() => {
-		notification.style.opacity = '1'
-		notification.style.transform = 'translateX(0)'
-	}, 100)
-
-	// Hide and remove notification
-	setTimeout(() => {
-		notification.style.opacity = '0'
-		notification.style.transform = 'translateX(100%)'
-		setTimeout(() => notification.remove(), 300)
-	}, 3000)
 }
 
-// Call initialize functions
-initTooltips()
+// Initialize all functionality when DOM is loaded
+document.addEventListener('DOMContentLoaded', function () {
+	initGallery()
+	initNavigation()
+	initContactForm()
+	initAddToCart()
+})

@@ -29,6 +29,12 @@
 					<a href="#services" class="nav-link">Услуги</a>
 					<a href="#contact" class="nav-link">Контакты</a>
 				</div>
+				<div class="nav-cart">
+					<button class="cart-toggle" id="cart-toggle">
+						<i class="fas fa-shopping-cart"></i>
+						<span class="cart-count hidden" id="cart-count">0</span>
+					</button>
+				</div>
 				<div class="nav-toggle" id="nav-toggle">
 					<span class="bar"></span>
 					<span class="bar"></span>
@@ -132,20 +138,17 @@
 							</div>
 							<div class="product-badge">Хит продаж</div>
 							<div class="gallery-nav">
-								<button
-									class="gallery-btn prev"
-									onclick="changeImage(this, -1)"
-								>
-									&lt;
+								<button class="gallery-btn prev">
+									<i class="fas fa-chevron-left"></i>
 								</button>
-								<button class="gallery-btn next" onclick="changeImage(this, 1)">
-									&gt;
+								<button class="gallery-btn next">
+									<i class="fas fa-chevron-right"></i>
 								</button>
 							</div>
 							<div class="gallery-dots">
-								<span class="dot active" onclick="currentImage(this, 1)"></span>
-								<span class="dot" onclick="currentImage(this, 2)"></span>
-								<span class="dot" onclick="currentImage(this, 3)"></span>
+								<span class="gallery-indicator active"></span>
+								<span class="gallery-indicator"></span>
+								<span class="gallery-indicator"></span>
 							</div>
 						</div>
 						<div class="product-info">
@@ -191,20 +194,17 @@
 							</div>
 							<div class="product-badge">Новинка</div>
 							<div class="gallery-nav">
-								<button
-									class="gallery-btn prev"
-									onclick="changeImage(this, -1)"
-								>
-									&lt;
+								<button class="gallery-btn prev">
+									<i class="fas fa-chevron-left"></i>
 								</button>
-								<button class="gallery-btn next" onclick="changeImage(this, 1)">
-									&gt;
+								<button class="gallery-btn next">
+									<i class="fas fa-chevron-right"></i>
 								</button>
 							</div>
 							<div class="gallery-dots">
-								<span class="dot active" onclick="currentImage(this, 1)"></span>
-								<span class="dot" onclick="currentImage(this, 2)"></span>
-								<span class="dot" onclick="currentImage(this, 3)"></span>
+								<span class="gallery-indicator active"></span>
+								<span class="gallery-indicator"></span>
+								<span class="gallery-indicator"></span>
 							</div>
 						</div>
 						<div class="product-info">
@@ -249,20 +249,17 @@
 								/>
 							</div>
 							<div class="gallery-nav">
-								<button
-									class="gallery-btn prev"
-									onclick="changeImage(this, -1)"
-								>
-									&lt;
+								<button class="gallery-btn prev">
+									<i class="fas fa-chevron-left"></i>
 								</button>
-								<button class="gallery-btn next" onclick="changeImage(this, 1)">
-									&gt;
+								<button class="gallery-btn next">
+									<i class="fas fa-chevron-right"></i>
 								</button>
 							</div>
 							<div class="gallery-dots">
-								<span class="dot active" onclick="currentImage(this, 1)"></span>
-								<span class="dot" onclick="currentImage(this, 2)"></span>
-								<span class="dot" onclick="currentImage(this, 3)"></span>
+								<span class="gallery-indicator active"></span>
+								<span class="gallery-indicator"></span>
+								<span class="gallery-indicator"></span>
 							</div>
 						</div>
 						<div class="product-info">
@@ -308,20 +305,17 @@
 							</div>
 							<div class="product-badge premium">Премиум</div>
 							<div class="gallery-nav">
-								<button
-									class="gallery-btn prev"
-									onclick="changeImage(this, -1)"
-								>
-									&lt;
+								<button class="gallery-btn prev">
+									<i class="fas fa-chevron-left"></i>
 								</button>
-								<button class="gallery-btn next" onclick="changeImage(this, 1)">
-									&gt;
+								<button class="gallery-btn next">
+									<i class="fas fa-chevron-right"></i>
 								</button>
 							</div>
 							<div class="gallery-dots">
-								<span class="dot active" onclick="currentImage(this, 1)"></span>
-								<span class="dot" onclick="currentImage(this, 2)"></span>
-								<span class="dot" onclick="currentImage(this, 3)"></span>
+								<span class="gallery-indicator active"></span>
+								<span class="gallery-indicator"></span>
+								<span class="gallery-indicator"></span>
 							</div>
 						</div>
 						<div class="product-info">
@@ -459,24 +453,39 @@
 					</div>
 
 					<div class="contact-form">
-						<form>
+						<h3>Оставить заявку</h3>
+						<p class="form-description">
+							Оплата наличными или картой при получении
+						</p>
+						<form id="contact-form">
 							<div class="form-group">
-								<input type="text" placeholder="Ваше имя" required />
+								<input
+									type="text"
+									name="name"
+									placeholder="Ваше имя *"
+									required
+								/>
 							</div>
 							<div class="form-group">
-								<input type="tel" placeholder="Телефон" required />
+								<input
+									type="tel"
+									name="phone"
+									placeholder="Телефон *"
+									required
+								/>
 							</div>
 							<div class="form-group">
-								<input type="email" placeholder="Email" />
+								<input type="email" name="email" placeholder="Email" />
 							</div>
 							<div class="form-group">
 								<textarea
+									name="message"
 									placeholder="Ваш заказ или вопрос"
 									rows="5"
-									required
 								></textarea>
 							</div>
 							<button type="submit" class="btn btn-primary">
+								<i class="fas fa-paper-plane"></i>
 								Отправить заявку
 							</button>
 						</form>
@@ -538,6 +547,49 @@
 				</div>
 			</div>
 		</footer>
+
+		<!-- Shopping Cart Sidebar -->
+		<div class="cart-sidebar" id="cart-sidebar">
+			<div class="cart-header">
+				<h3>Корзина</h3>
+				<button class="cart-close" id="close-cart">
+					<i class="fas fa-times"></i>
+				</button>
+			</div>
+			<div class="cart-content">
+				<div class="cart-items" id="cart-items">
+					<!-- Cart items will be dynamically inserted here -->
+				</div>
+				<div class="cart-empty" id="cart-empty">
+					<i class="fas fa-shopping-cart"></i>
+					<p>Корзина пуста</p>
+					<small>Добавьте товары для оформления заказа</small>
+				</div>
+			</div>
+			<div class="cart-footer">
+				<div class="cart-total">
+					<div class="total-row">
+						<span>Товары:</span>
+						<span id="cart-subtotal">0₽</span>
+					</div>
+					<div class="total-row">
+						<span>Доставка:</span>
+						<span id="cart-delivery">300₽</span>
+					</div>
+					<div class="total-row total-final">
+						<span>Итого:</span>
+						<span id="cart-total">300₽</span>
+					</div>
+				</div>
+				<button class="cart-checkout" id="checkout-btn">
+					<i class="fas fa-credit-card"></i>
+					Оформить заказ
+				</button>
+			</div>
+		</div>
+
+		<!-- Cart Overlay -->
+		<div class="cart-overlay" id="cart-overlay"></div>
 
 		<script src="script.js"></script>
 	</body>
