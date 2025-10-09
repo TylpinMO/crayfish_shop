@@ -119,60 +119,238 @@
 				</div>
 				<div class="products-grid">
 					<div class="product-card">
-						<div class="product-image">
-							<i class="fas fa-shrimp product-icon"></i>
+						<div class="product-image-gallery">
+							<div class="product-image-container">
+								<img
+									src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop&crop=center"
+									alt="Раки речные"
+									class="product-image"
+								/>
+								<img
+									src="https://images.unsplash.com/photo-1544943910-4c1dc44aab44?w=400&h=300&fit=crop&crop=center"
+									alt="Раки речные вареные"
+									class="product-image"
+								/>
+								<img
+									src="https://images.unsplash.com/photo-1563379091671-5c3ff2d2e24b?w=400&h=300&fit=crop&crop=center"
+									alt="Раки с пивом"
+									class="product-image"
+								/>
+							</div>
 							<div class="product-badge">Хит продаж</div>
+							<div class="gallery-nav">
+								<button
+									class="gallery-btn prev"
+									onclick="changeImage(this, -1)"
+								>
+									&lt;
+								</button>
+								<button class="gallery-btn next" onclick="changeImage(this, 1)">
+									&gt;
+								</button>
+							</div>
+							<div class="gallery-dots">
+								<span class="dot active" onclick="currentImage(this, 1)"></span>
+								<span class="dot" onclick="currentImage(this, 2)"></span>
+								<span class="dot" onclick="currentImage(this, 3)"></span>
+							</div>
 						</div>
 						<div class="product-info">
 							<h3>Раки речные</h3>
+							<div class="product-rating">
+								<span class="stars">★★★★★</span>
+								<span class="rating-text">(47 отзывов)</span>
+							</div>
 							<p>
 								Свежие раки из чистых водоемов. Идеально подходят для пивных
-								посиделок с друзьями.
+								посиделок с друзьями. Поставляются живыми или свежевареными.
 							</p>
+							<div class="product-details">
+								<span class="detail-item">🚚 Доставка: 2-3 часа</span>
+								<span class="detail-item">📦 Минимум: 1 кг</span>
+								<span class="detail-item">🌟 Размер: крупный</span>
+							</div>
 							<div class="product-price">от 800₽/кг</div>
-							<button class="btn-add-to-cart">Заказать</button>
+							<div class="product-actions">
+								<button class="btn-add-to-cart">В корзину</button>
+								<button class="btn-quick-order">Быстрый заказ</button>
+							</div>
 						</div>
 					</div>
 					<div class="product-card">
-						<div class="product-image">
-							<i class="fas fa-fish product-icon"></i>
+						<div class="product-image-gallery">
+							<div class="product-image-container">
+								<img
+									src="https://images.unsplash.com/photo-1535530705774-54c16a980dee?w=400&h=300&fit=crop&crop=center"
+									alt="Лангустины свежие"
+									class="product-image"
+								/>
+								<img
+									src="https://images.unsplash.com/photo-1599084993091-1cb5c0721cc6?w=400&h=300&fit=crop&crop=center"
+									alt="Лангустины приготовленные"
+									class="product-image"
+								/>
+								<img
+									src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=400&h=300&fit=crop&crop=center"
+									alt="Лангустины на тарелке"
+									class="product-image"
+								/>
+							</div>
 							<div class="product-badge">Новинка</div>
+							<div class="gallery-nav">
+								<button
+									class="gallery-btn prev"
+									onclick="changeImage(this, -1)"
+								>
+									&lt;
+								</button>
+								<button class="gallery-btn next" onclick="changeImage(this, 1)">
+									&gt;
+								</button>
+							</div>
+							<div class="gallery-dots">
+								<span class="dot active" onclick="currentImage(this, 1)"></span>
+								<span class="dot" onclick="currentImage(this, 2)"></span>
+								<span class="dot" onclick="currentImage(this, 3)"></span>
+							</div>
 						</div>
 						<div class="product-info">
 							<h3>Лангустины</h3>
+							<div class="product-rating">
+								<span class="stars">★★★★☆</span>
+								<span class="rating-text">(23 отзыва)</span>
+							</div>
 							<p>
 								Деликатесные морские лангустины. Отличный выбор для особых
-								случаев и праздников.
+								случаев и праздников. Нежное мясо с изысканным вкусом.
 							</p>
+							<div class="product-details">
+								<span class="detail-item">🚚 Доставка: 3-4 часа</span>
+								<span class="detail-item">📦 Минимум: 0.5 кг</span>
+								<span class="detail-item">🌟 Размер: премиум</span>
+							</div>
 							<div class="product-price">от 1500₽/кг</div>
-							<button class="btn-add-to-cart">Заказать</button>
+							<div class="product-actions">
+								<button class="btn-add-to-cart">В корзину</button>
+								<button class="btn-quick-order">Быстрый заказ</button>
+							</div>
 						</div>
 					</div>
 					<div class="product-card">
-						<div class="product-image">
-							<i class="fas fa-fish product-icon"></i>
+						<div class="product-image-gallery">
+							<div class="product-image-container">
+								<img
+									src="https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=400&h=300&fit=crop&crop=center"
+									alt="Креветки королевские"
+									class="product-image"
+								/>
+								<img
+									src="https://images.unsplash.com/photo-1559737558-2f5a35f9acd7?w=400&h=300&fit=crop&crop=center"
+									alt="Креветки вареные"
+									class="product-image"
+								/>
+								<img
+									src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&crop=center"
+									alt="Креветки на льду"
+									class="product-image"
+								/>
+							</div>
+							<div class="gallery-nav">
+								<button
+									class="gallery-btn prev"
+									onclick="changeImage(this, -1)"
+								>
+									&lt;
+								</button>
+								<button class="gallery-btn next" onclick="changeImage(this, 1)">
+									&gt;
+								</button>
+							</div>
+							<div class="gallery-dots">
+								<span class="dot active" onclick="currentImage(this, 1)"></span>
+								<span class="dot" onclick="currentImage(this, 2)"></span>
+								<span class="dot" onclick="currentImage(this, 3)"></span>
+							</div>
 						</div>
 						<div class="product-info">
 							<h3>Креветки королевские</h3>
+							<div class="product-rating">
+								<span class="stars">★★★★★</span>
+								<span class="rating-text">(62 отзыва)</span>
+							</div>
 							<p>
 								Крупные сочные креветки. Готовы к употреблению, нужно только
-								разогреть.
+								разогреть. Богаты белком и полезными веществами.
 							</p>
+							<div class="product-details">
+								<span class="detail-item">🚚 Доставка: 1-2 часа</span>
+								<span class="detail-item">📦 Минимум: 0.5 кг</span>
+								<span class="detail-item">🌟 Размер: королевский</span>
+							</div>
 							<div class="product-price">от 1200₽/кг</div>
-							<button class="btn-add-to-cart">Заказать</button>
+							<div class="product-actions">
+								<button class="btn-add-to-cart">В корзину</button>
+								<button class="btn-quick-order">Быстрый заказ</button>
+							</div>
 						</div>
 					</div>
 					<div class="product-card">
-						<div class="product-image">
-							<i class="fas fa-fish product-icon"></i>
+						<div class="product-image-gallery">
+							<div class="product-image-container">
+								<img
+									src="https://images.unsplash.com/photo-1544943910-4c6dc44aab44?w=400&h=300&fit=crop&crop=center"
+									alt="Крабы камчатские живые"
+									class="product-image"
+								/>
+								<img
+									src="https://images.unsplash.com/photo-1562565652-a0d8f0c59eb4?w=400&h=300&fit=crop&crop=center"
+									alt="Крабы камчатские вареные"
+									class="product-image"
+								/>
+								<img
+									src="https://images.unsplash.com/photo-1559181567-c3190ca9959b?w=400&h=300&fit=crop&crop=center"
+									alt="Мясо краба"
+									class="product-image"
+								/>
+							</div>
+							<div class="product-badge premium">Премиум</div>
+							<div class="gallery-nav">
+								<button
+									class="gallery-btn prev"
+									onclick="changeImage(this, -1)"
+								>
+									&lt;
+								</button>
+								<button class="gallery-btn next" onclick="changeImage(this, 1)">
+									&gt;
+								</button>
+							</div>
+							<div class="gallery-dots">
+								<span class="dot active" onclick="currentImage(this, 1)"></span>
+								<span class="dot" onclick="currentImage(this, 2)"></span>
+								<span class="dot" onclick="currentImage(this, 3)"></span>
+							</div>
 						</div>
 						<div class="product-info">
 							<h3>Крабы камчатские</h3>
+							<div class="product-rating">
+								<span class="stars">★★★★★</span>
+								<span class="rating-text">(34 отзыва)</span>
+							</div>
 							<p>
 								Настоящие камчатские крабы с Дальнего Востока. Премиум качество.
+								Сладкое, нежное мясо с неповторимым вкусом.
 							</p>
+							<div class="product-details">
+								<span class="detail-item">🚚 Доставка: 4-6 часов</span>
+								<span class="detail-item">📦 Минимум: 1 шт</span>
+								<span class="detail-item">🌟 Размер: гигантский</span>
+							</div>
 							<div class="product-price">от 2500₽/кг</div>
-							<button class="btn-add-to-cart">Заказать</button>
+							<div class="product-actions">
+								<button class="btn-add-to-cart">В корзину</button>
+								<button class="btn-quick-order">Быстрый заказ</button>
+							</div>
 						</div>
 					</div>
 				</div>

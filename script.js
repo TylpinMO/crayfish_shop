@@ -277,5 +277,141 @@ function initTooltips() {
 	})
 }
 
+// Gallery functionality
+function changeImage(button, direction) {
+	const gallery = button.closest('.product-image-gallery')
+	const images = gallery.querySelectorAll('.product-image')
+	const dots = gallery.querySelectorAll('.dot')
+
+	let currentIndex = Array.from(images).findIndex(img =>
+		img.classList.contains('active')
+	)
+	let newIndex = currentIndex + direction
+
+	if (newIndex >= images.length) newIndex = 0
+	if (newIndex < 0) newIndex = images.length - 1
+
+	// Remove active classes
+	images[currentIndex].classList.remove('active')
+	dots[currentIndex].classList.remove('active')
+
+	// Add active classes
+	images[newIndex].classList.add('active')
+	dots[newIndex].classList.add('active')
+}
+
+function currentImage(dot, n) {
+	const gallery = dot.closest('.product-image-gallery')
+	const images = gallery.querySelectorAll('.product-image')
+	const dots = gallery.querySelectorAll('.dot')
+
+	// Remove all active classes
+	images.forEach(img => img.classList.remove('active'))
+	dots.forEach(d => d.classList.remove('active'))
+
+	// Add active classes to selected
+	images[n - 1].classList.add('active')
+	dots[n - 1].classList.add('active')
+}
+
+// Initialize gallery - make first image active in each gallery
+document.addEventListener('DOMContentLoaded', function () {
+	document.querySelectorAll('.product-image-gallery').forEach(gallery => {
+		const firstImage = gallery.querySelector('.product-image')
+		const firstDot = gallery.querySelector('.dot')
+		if (firstImage) firstImage.classList.add('active')
+		if (firstDot) firstDot.classList.add('active')
+	})
+})
+
+// Auto-slide gallery every 5 seconds
+setInterval(() => {
+	document.querySelectorAll('.product-image-gallery').forEach(gallery => {
+		const nextBtn = gallery.querySelector('.gallery-btn.next')
+		if (nextBtn) {
+			changeImage(nextBtn, 1)
+		}
+	})
+}, 5000)
+
+// Enhanced add to cart functionality
+document.querySelectorAll('.btn-add-to-cart').forEach(button => {
+	button.addEventListener('click', function () {
+		const productCard = this.closest('.product-card')
+		const productName = productCard.querySelector('h3').textContent
+		const productPrice = productCard.querySelector('.product-price').textContent
+
+		// Animation effect
+		const originalText = this.textContent
+		this.textContent = 'Добавлено!'
+		this.style.background = '#27ae60'
+
+		// Show notification
+		showNotification(`${productName} добавлен в корзину`, 'success')
+
+		setTimeout(() => {
+			this.textContent = originalText
+			this.style.background = ''
+		}, 2000)
+
+		console.log(`Добавлен в корзину: ${productName} - ${productPrice}`)
+	})
+})
+
+// Quick order functionality
+document.querySelectorAll('.btn-quick-order').forEach(button => {
+	button.addEventListener('click', function () {
+		const productCard = this.closest('.product-card')
+		const productName = productCard.querySelector('h3').textContent
+
+		// Scroll to contact form and pre-fill message
+		const contactForm = document.querySelector('.contact-form textarea')
+		if (contactForm) {
+			contactForm.value = `Хочу заказать: ${productName}`
+			document.querySelector('#contact').scrollIntoView({ behavior: 'smooth' })
+		}
+
+		showNotification('Форма заказа подготовлена', 'info')
+	})
+})
+
+// Notification system
+function showNotification(message, type = 'info') {
+	const notification = document.createElement('div')
+	notification.className = `notification notification-${type}`
+	notification.textContent = message
+	notification.style.cssText = `
+		position: fixed;
+		top: 100px;
+		right: 20px;
+		background: ${
+			type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#3498db'
+		};
+		color: white;
+		padding: 15px 25px;
+		border-radius: 25px;
+		box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+		z-index: 1001;
+		opacity: 0;
+		transform: translateX(100%);
+		transition: all 0.3s ease;
+	`
+
+	document.body.appendChild(notification)
+
+	// Show notification
+	setTimeout(() => {
+		notification.style.opacity = '1'
+		notification.style.transform = 'translateX(0)'
+	}, 100)
+
+	// Hide and remove notification
+	setTimeout(() => {
+		notification.style.opacity = '0'
+		notification.style.transform = 'translateX(100%)'
+		setTimeout(() => notification.remove(), 300)
+	}, 3000)
+}
+
 // Call initialize functions
 initTooltips()
