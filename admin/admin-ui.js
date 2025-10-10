@@ -245,24 +245,61 @@ class AdminUI {
 
 	async loadDashboardData() {
 		try {
-			// В следующих итерациях добавим реальные API вызовы
-			// Пока показываем демо данные
-			document.getElementById('total-orders').textContent = '12'
-			document.getElementById('new-orders').textContent = '3 новых'
-			document.getElementById('total-products').textContent = '8'
-			document.getElementById('low-stock').textContent = '1 заканчивается'
-			document.getElementById('total-revenue').textContent = '45,600₽'
-			document.getElementById('revenue-change').textContent = '+12%'
+			// Load real data from API
+			const products = await this.loadProductsCount()
+			const orders = await this.loadOrdersCount()
+
+			document.getElementById('total-orders').textContent = orders.total || '0'
+			document.getElementById('new-orders').textContent =
+				(orders.new || 0) + ' новых'
+			document.getElementById('total-products').textContent =
+				products.total || '0'
+			document.getElementById('low-stock').textContent =
+				(products.lowStock || 0) + ' заканчивается'
+
+			// Calculate revenue (placeholder for now)
+			document.getElementById('total-revenue').textContent = '0₽'
+			document.getElementById('revenue-change').textContent = '+0%'
 
 			document.getElementById('recent-orders').innerHTML = `
-                <div class="demo-message">
-                    <i class="fas fa-info-circle"></i>
-                    <p>Демо режим - данные будут загружаться после настройки Supabase</p>
+                <div class="admin-message success">
+                    <i class="fas fa-check-circle"></i>
+                    <p>Админ панель подключена к базе данных</p>
+                    <small>Товаров: ${products.total} | Заказов: ${orders.total}</small>
                 </div>
             `
 		} catch (error) {
 			console.error('Dashboard loading error:', error)
+			// Show fallback data
+			document.getElementById('total-orders').textContent = '0'
+			document.getElementById('new-orders').textContent = '0 новых'
+			document.getElementById('total-products').textContent = '0'
+			document.getElementById('low-stock').textContent = '0 заканчивается'
+			document.getElementById('total-revenue').textContent = '0₽'
+			document.getElementById('revenue-change').textContent = '+0%'
 		}
+	}
+
+	async loadProductsCount() {
+		try {
+			const response = await fetch('/.netlify/functions/products')
+			const data = await response.json()
+			if (data.success) {
+				const lowStockCount = data.products.filter(p => !p.inStock).length
+				return {
+					total: data.products.length,
+					lowStock: lowStockCount,
+				}
+			}
+		} catch (error) {
+			console.error('Failed to load products count:', error)
+		}
+		return { total: 0, lowStock: 0 }
+	}
+
+	async loadOrdersCount() {
+		// Placeholder - orders API not implemented yet
+		return { total: 0, new: 0 }
 	}
 
 	async loadProducts() {

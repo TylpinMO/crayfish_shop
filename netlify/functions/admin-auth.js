@@ -105,7 +105,7 @@ async function handleLogin(email, password, headers) {
 		console.log('Verifying password...')
 		console.log('Password provided:', password)
 		console.log('Stored hash:', adminUser.password_hash)
-		
+
 		// Verify password
 		try {
 			const isValidPassword = await bcrypt.compare(
@@ -113,7 +113,7 @@ async function handleLogin(email, password, headers) {
 				adminUser.password_hash
 			)
 			console.log('Password verification result:', isValidPassword)
-			
+
 			if (!isValidPassword) {
 				console.log('Password verification failed')
 				return {

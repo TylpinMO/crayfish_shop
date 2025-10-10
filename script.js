@@ -1030,10 +1030,74 @@ function initAddToCart() {
 	})
 }
 
+// Load products from API
+async function loadProducts() {
+	try {
+		const response = await fetch('/.netlify/functions/products')
+		const data = await response.json()
+
+		if (data.success) {
+			updateProductsOnPage(data.products)
+		} else {
+			console.error('Failed to load products:', data.error)
+		}
+	} catch (error) {
+		console.error('Products API error:', error)
+		// Continue with hardcoded products if API fails
+	}
+}
+
+function updateProductsOnPage(products) {
+	const productGrid = document.querySelector('#products .product-grid')
+	if (!productGrid || products.length === 0) return
+
+	// Clear existing products except first few (keep some hardcoded as fallback)
+	productGrid.innerHTML = products
+		.map(
+			product => `
+		<div class="product-card" data-id="${product.id}">
+			<div class="product-image">
+				<img src="${product.image}" alt="${product.name}" loading="lazy">
+				${product.isFeatured ? '<span class="featured-badge">Хит продаж</span>' : ''}
+				${
+					!product.inStock
+						? '<span class="out-of-stock-badge">Нет в наличии</span>'
+						: ''
+				}
+			</div>
+			<div class="product-info">
+				<div class="product-category">${product.category}</div>
+				<h3>${product.name}</h3>
+				<p class="product-description">${product.description || ''}</p>
+				<div class="product-price">
+					<span class="price">${product.price.toLocaleString()} ₽</span>
+					${
+						product.oldPrice
+							? `<span class="old-price">${product.oldPrice.toLocaleString()} ₽</span>`
+							: ''
+					}
+					<span class="unit">за ${product.unit}</span>
+				</div>
+				<button class="add-to-cart" ${!product.inStock ? 'disabled' : ''}>
+					<i class="fas fa-shopping-cart"></i>
+					${product.inStock ? 'В корзину' : 'Нет в наличии'}
+				</button>
+			</div>
+		</div>
+	`
+		)
+		.join('')
+
+	console.log(`Loaded ${products.length} products from database`)
+}
+
 // Initialize all functionality when DOM is loaded
 document.addEventListener('DOMContentLoaded', function () {
 	// Initialize loading screen
 	initLoadingScreen()
+
+	// Load products from database
+	loadProducts()
 
 	// Initialize address autocomplete
 	new AddressAutocomplete('address-input', 'address-suggestions')
