@@ -1074,12 +1074,10 @@ function updateProductsOnPage(products) {
 			product => `
 		<div class="product-card" data-id="${product.id}">
 			<div class="product-image">
-				<img src="${product.image}" alt="${product.name}" loading="lazy" onerror="this.src='/images/fish-placeholder.jpg'">
-				${
-					product.isFeatured
-						? '<span class="featured-badge">Хит продаж</span>'
-						: ''
-				}
+				<img src="${product.image}" alt="${
+				product.name
+			}" loading="lazy" onerror="this.src='/images/fish-placeholder.jpg'">
+				${product.isFeatured ? '<span class="featured-badge">Хит продаж</span>' : ''}
 				${
 					!product.inStock
 						? '<span class="out-of-stock-badge">Нет в наличии</span>'
@@ -1110,7 +1108,7 @@ function updateProductsOnPage(products) {
 		.join('')
 
 	console.log(`Loaded ${products.length} products from database`)
-}// Initialize all functionality when DOM is loaded
+} // Initialize all functionality when DOM is loaded
 document.addEventListener('DOMContentLoaded', function () {
 	// Initialize loading screen
 	initLoadingScreen()

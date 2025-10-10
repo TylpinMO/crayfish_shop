@@ -36,7 +36,7 @@ exports.handler = async (event, context) => {
 	}
 
 	try {
-		// Get all active products with categories
+		// Get all active products with categories and images
 		const { data: products, error } = await supabase
 			.from('products')
 			.select(
@@ -44,8 +44,12 @@ exports.handler = async (event, context) => {
 				*,
 				categories (
 					id,
-					name,
-					slug
+					name
+				),
+				product_images (
+					image_url,
+					alt_text,
+					is_primary
 				)
 			`
 			)
@@ -62,20 +66,28 @@ exports.handler = async (event, context) => {
 		}
 
 		// Transform data for frontend
-		const transformedProducts = products.map(product => ({
-			id: product.id,
-			name: product.name,
-			description: product.description,
-			price: product.price,
-			oldPrice: product.old_price,
-			image: product.image_url || '/images/fish-placeholder.jpg',
-			category: product.categories?.name || 'Товары',
-			categorySlug: product.categories?.slug || 'products',
-			inStock: product.stock_quantity > 0,
-			weight: product.weight,
-			unit: product.unit || 'кг',
-			isFeatured: product.is_featured,
-		}))
+		const transformedProducts = products.map(product => {
+			// Get primary image or first available image
+			const primaryImage =
+				product.product_images?.find(img => img.is_primary) ||
+				product.product_images?.[0]
+			const categoryName = product.categories?.name || 'Товары'
+
+			return {
+				id: product.id,
+				name: product.name,
+				description: product.description,
+				price: product.price,
+				oldPrice: product.old_price,
+				image: primaryImage?.image_url || '/images/fish-placeholder.jpg',
+				category: categoryName,
+				categorySlug: categoryName.toLowerCase().replace(/\s+/g, '-'),
+				inStock: product.stock_quantity > 0,
+				weight: product.weight,
+				unit: product.unit || 'кг',
+				isFeatured: product.is_featured,
+			}
+		})
 
 		// Group by categories
 		const categories = {}
