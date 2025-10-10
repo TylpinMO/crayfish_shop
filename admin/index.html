@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Admin Panel - РакоМаркет</title>
+		<link rel="stylesheet" href="../styles.css" />
+		<link rel="stylesheet" href="admin-styles.css" />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+			rel="stylesheet"
+		/>
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+		/>
+	</head>
+	<body class="admin-body">
+		<!-- Loading Screen -->
+		<div class="loading-screen" id="loading-screen">
+			<div class="loading-content">
+				<div class="loading-shrimp">
+					<i class="fas fa-cog fa-spin"></i>
+				</div>
+				<div class="loading-text">
+					<h2>Админ-панель</h2>
+					<p>Загружаем систему управления...</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- Login Form (shown when not authenticated) -->
+		<div class="login-container" id="login-container">
+			<div class="login-form">
+				<div class="login-header">
+					<i class="fas fa-shield-alt"></i>
+					<h2>Вход в админ-панель</h2>
+					<p>РакоМаркет - Система управления</p>
+				</div>
+				<form id="login-form">
+					<div class="form-group">
+						<label for="email">Email</label>
+						<input type="email" id="email" name="email" required />
+					</div>
+					<div class="form-group">
+						<label for="password">Пароль</label>
+						<input type="password" id="password" name="password" required />
+					</div>
+					<button type="submit" class="btn-login">
+						<i class="fas fa-sign-in-alt"></i>
+						Войти
+					</button>
+				</form>
+				<div class="login-footer">
+					<p>Демо доступ: admin@demo.com / demo123</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- Admin Dashboard (shown when authenticated) -->
+		<div class="admin-container" id="admin-container" style="display: none">
+			<!-- Sidebar Navigation -->
+			<aside class="admin-sidebar">
+				<div class="sidebar-header">
+					<i class="fas fa-shrimp"></i>
+					<span>РакоМаркет</span>
+					<small>Admin Panel</small>
+				</div>
+
+				<nav class="sidebar-nav">
+					<a href="#dashboard" class="nav-item active" data-page="dashboard">
+						<i class="fas fa-chart-pie"></i>
+						<span>Dashboard</span>
+					</a>
+					<a href="#products" class="nav-item" data-page="products">
+						<i class="fas fa-fish"></i>
+						<span>Товары</span>
+						<span class="nav-badge" id="products-count">0</span>
+					</a>
+					<a href="#categories" class="nav-item" data-page="categories">
+						<i class="fas fa-tags"></i>
+						<span>Категории</span>
+					</a>
+					<a href="#orders" class="nav-item" data-page="orders">
+						<i class="fas fa-shopping-cart"></i>
+						<span>Заказы</span>
+						<span class="nav-badge new-orders" id="orders-count">0</span>
+					</a>
+					<a href="#settings" class="nav-item" data-page="settings">
+						<i class="fas fa-cog"></i>
+						<span>Настройки</span>
+					</a>
+				</nav>
+
+				<div class="sidebar-footer">
+					<div class="user-info">
+						<i class="fas fa-user-circle"></i>
+						<span id="current-user">Admin</span>
+					</div>
+					<button class="btn-logout" id="logout-btn">
+						<i class="fas fa-sign-out-alt"></i>
+						Выйти
+					</button>
+				</div>
+			</aside>
+
+			<!-- Main Content Area -->
+			<main class="admin-main">
+				<!-- Header -->
+				<header class="admin-header">
+					<div class="header-left">
+						<button class="sidebar-toggle" id="sidebar-toggle">
+							<i class="fas fa-bars"></i>
+						</button>
+						<h1 id="page-title">Dashboard</h1>
+					</div>
+					<div class="header-right">
+						<div class="header-stats">
+							<div class="stat-item">
+								<i class="fas fa-shopping-cart"></i>
+								<span
+									>Новых заказов: <strong id="new-orders-count">0</strong></span
+								>
+							</div>
+							<div class="stat-item">
+								<i class="fas fa-exclamation-triangle"></i>
+								<span
+									>Мало товара: <strong id="low-stock-count">0</strong></span
+								>
+							</div>
+						</div>
+					</div>
+				</header>
+
+				<!-- Page Content Container -->
+				<div class="page-content" id="page-content">
+					<!-- Content will be loaded dynamically -->
+				</div>
+			</main>
+		</div>
+
+		<!-- Notifications Container -->
+		<div id="notifications-container"></div>
+
+		<!-- No Supabase on client - using secure API! -->
+		<!-- Admin Scripts -->
+		<script src="admin-auth.js"></script>
+		<script src="admin-api.js"></script>
+		<script src="admin-ui.js"></script>
+	</body>
+</html>

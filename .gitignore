@@ -1,5 +1,6 @@
 # Конфиденциальные файлы
 config.js
+supabase-config.js
 *.env
 .env
 .env.local
