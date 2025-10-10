@@ -1048,17 +1048,38 @@ async function loadProducts() {
 }
 
 function updateProductsOnPage(products) {
-	const productGrid = document.querySelector('#products .product-grid')
-	if (!productGrid || products.length === 0) return
+	const productGrid = document.querySelector('#products-grid')
+	if (!productGrid) return
 
-	// Clear existing products except first few (keep some hardcoded as fallback)
+	// Clear loading message
+	productGrid.innerHTML = ''
+
+	if (products.length === 0) {
+		productGrid.innerHTML = `
+			<div class="no-products-message">
+				<div class="no-products-icon">
+					<i class="fas fa-fish"></i>
+				</div>
+				<h3>Товары загружаются...</h3>
+				<p>Добавьте товары через админ панель или выполните SQL из database/sample_products.sql</p>
+				<a href="/admin/" class="btn-admin">Перейти в админку</a>
+			</div>
+		`
+		return
+	}
+
+	// Render products from database
 	productGrid.innerHTML = products
 		.map(
 			product => `
 		<div class="product-card" data-id="${product.id}">
 			<div class="product-image">
-				<img src="${product.image}" alt="${product.name}" loading="lazy">
-				${product.isFeatured ? '<span class="featured-badge">Хит продаж</span>' : ''}
+				<img src="${product.image}" alt="${product.name}" loading="lazy" onerror="this.src='/images/fish-placeholder.jpg'">
+				${
+					product.isFeatured
+						? '<span class="featured-badge">Хит продаж</span>'
+						: ''
+				}
 				${
 					!product.inStock
 						? '<span class="out-of-stock-badge">Нет в наличии</span>'
@@ -1089,9 +1110,7 @@ function updateProductsOnPage(products) {
 		.join('')
 
 	console.log(`Loaded ${products.length} products from database`)
-}
-
-// Initialize all functionality when DOM is loaded
+}// Initialize all functionality when DOM is loaded
 document.addEventListener('DOMContentLoaded', function () {
 	// Initialize loading screen
 	initLoadingScreen()
