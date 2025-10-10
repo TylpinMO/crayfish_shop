@@ -157,7 +157,10 @@ exports.handler = async (event, context) => {
 		}
 
 		console.log(`Processing ${products.length} products...`)
-		console.log('Raw products sample:', JSON.stringify(products.slice(0, 2), null, 2))
+		console.log(
+			'Raw products sample:',
+			JSON.stringify(products.slice(0, 2), null, 2)
+		)
 
 		// Transform data for frontend with validation
 		const transformedProducts = products
@@ -172,6 +175,11 @@ exports.handler = async (event, context) => {
 
 					// Normalize image URL
 					const imageUrl = normalizeImageUrl(primaryImage?.image_url)
+					console.log('Image processing:', {
+						productName: product.name,
+						rawImageUrl: primaryImage?.image_url,
+						normalizedUrl: imageUrl
+					})
 
 					// Validate required fields
 					if (!product.name || typeof product.price !== 'number') {

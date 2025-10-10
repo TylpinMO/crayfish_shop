@@ -2353,7 +2353,11 @@ html {
 .empty-icon {
 	width: 80px;
 	height: 80px;
-	background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+	background: linear-gradient(
+		135deg,
+		var(--color-primary),
+		var(--color-secondary)
+	);
 	border-radius: 50%;
 	display: flex;
 	align-items: center;

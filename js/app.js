@@ -101,8 +101,13 @@ class FishShopApp {
 	 * Handle add to cart button clicks
 	 */
 	handleAddToCart(e) {
+		console.log('🛒 handleAddToCart called', e.target)
 		const button = e.target.closest('.add-to-cart')
-		if (!button) return
+		if (!button) {
+			console.log('❌ No add-to-cart button found')
+			return
+		}
+		console.log('✅ Found add-to-cart button', button)
 
 		e.preventDefault()
 		e.stopPropagation()
@@ -212,7 +217,7 @@ class FishShopApp {
 			})
 		})
 
-		// Cart close buttons  
+		// Cart close buttons
 		const closeButtons = document.querySelectorAll('[data-action="close-cart"]')
 		closeButtons.forEach(button => {
 			button.addEventListener('click', () => {

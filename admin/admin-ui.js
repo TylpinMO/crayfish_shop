@@ -297,10 +297,16 @@ class AdminUI {
 			const response = await fetch('/.netlify/functions/products')
 			const data = await response.json()
 			if (data.success) {
+				console.log('📊 Admin products data:', data.products.slice(0, 2))
 				// Count products with stock <= 5 as low stock
-				const lowStockCount = data.products.filter(p => 
-					p.stockQuantity !== undefined && p.stockQuantity <= 5
+				const lowStockCount = data.products.filter(
+					p => {
+						const stock = p.stockQuantity || p.stock_quantity || p.stock || 0
+						console.log(`Product ${p.name}: stock=${stock}`)
+						return stock <= 5
+					}
 				).length
+				console.log(`📊 Low stock count: ${lowStockCount}`)
 				return {
 					total: data.products.length,
 					lowStock: lowStockCount,
