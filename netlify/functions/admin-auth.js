@@ -1,13 +1,28 @@
-// Secure Admin Authentication via Netlify Functions
-// No Supabase keys exposed to client!
+/**
+ * Secure Admin Authentication via Netlify Functions
+ *
+ * Security Features:
+ * - No Supabase keys exposed to client
+ * - JWT tokens with expiration
+ * - bcrypt password hashing
+ * - Rate limiting protection
+ * - Input validation and sanitization
+ * - Audit logging
+ */
 
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const { createClient } = require('@supabase/supabase-js')
 
 // Environment validation
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
-	console.error('Missing Supabase environment variables!')
+const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY', 'JWT_SECRET']
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName])
+
+if (missingVars.length > 0) {
+	console.error(
+		`Missing required environment variables: ${missingVars.join(', ')}`
+	)
+	throw new Error('Server configuration error')
 }
 
 // Initialize Supabase with server-side keys from environment
@@ -22,7 +37,62 @@ const supabase = createClient(
 	}
 )
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key'
+const JWT_SECRET = process.env.JWT_SECRET
+const JWT_EXPIRES_IN = '24h'
+const MAX_LOGIN_ATTEMPTS = 5
+const LOCKOUT_DURATION = 15 * 60 * 1000 // 15 minutes
+
+// Simple rate limiting store (in-memory)
+const loginAttempts = new Map()
+
+/**
+ * Validate email format
+ */
+function isValidEmail(email) {
+	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+	return emailRegex.test(email)
+}
+
+/**
+ * Sanitize input strings
+ */
+function sanitizeInput(input) {
+	if (typeof input !== 'string') return ''
+	return input.trim().toLowerCase()
+}
+
+/**
+ * Check rate limiting
+ */
+function checkRateLimit(ip) {
+	const attempts = loginAttempts.get(ip) || { count: 0, lastAttempt: 0 }
+	const now = Date.now()
+
+	// Reset counter if lockout period has passed
+	if (now - attempts.lastAttempt > LOCKOUT_DURATION) {
+		attempts.count = 0
+	}
+
+	return attempts.count < MAX_LOGIN_ATTEMPTS
+}
+
+/**
+ * Record login attempt
+ */
+function recordLoginAttempt(ip, success) {
+	const attempts = loginAttempts.get(ip) || { count: 0, lastAttempt: 0 }
+	const now = Date.now()
+
+	if (success) {
+		// Reset on successful login
+		attempts.count = 0
+	} else {
+		attempts.count++
+	}
+
+	attempts.lastAttempt = now
+	loginAttempts.set(ip, attempts)
+}
 
 exports.handler = async (event, context) => {
 	// CORS headers

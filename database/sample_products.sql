@@ -55,17 +55,26 @@ CROSS JOIN (VALUES
 ) AS image_data(sku, image_url, alt_text)
 WHERE p.sku = image_data.sku;
 
--- 4. Проверяем что добавилось (результат отобразится внизу)
+-- 4. ИСПРАВЛЯЕМ ПУТИ ИЗОБРАЖЕНИЙ (убираем ведущие слеши для Netlify)
+UPDATE product_images 
+SET image_url = SUBSTRING(image_url FROM 2) 
+WHERE image_url LIKE '/%' 
+  AND image_url NOT LIKE '//%';
+
+-- 5. Проверяем что добавилось (результат отобразится внизу)
 SELECT 
   p.name as "Название товара",
   p.price as "Цена",
   c.name as "Категория",
   p.stock_quantity as "Остаток",
-  CASE WHEN p.is_featured THEN 'Да' ELSE 'Нет' END as "Рекомендуемый"
+  CASE WHEN p.is_featured THEN 'Да' ELSE 'Нет' END as "Рекомендуемый",
+  pi.image_url as "Путь к изображению"
 FROM products p
 JOIN categories c ON p.category_id = c.id
+LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = true
 ORDER BY p.sort_order;
 
 -- ======================================
 -- ГОТОВО! Если видите товары выше - все работает
+-- Проверьте колонку "Путь к изображению" - не должно быть ведущих слешей
 -- ======================================
