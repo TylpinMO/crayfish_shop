@@ -30,7 +30,25 @@ const supabase = createClient(
 )
 
 /**
- * Normalize image URL for Netlify compatibility
+ * Get Supabase Storage public URL for image
+ */
+function getStorageImageUrl(storagePath, publicUrl) {
+	// If we have a public URL from Supabase Storage, use it
+	if (publicUrl && publicUrl.startsWith('http')) {
+		return publicUrl
+	}
+
+	// If we have a storage path, generate the URL
+	if (storagePath) {
+		return `${process.env.SUPABASE_URL}/storage/v1/object/public/product-images/${storagePath}`
+	}
+
+	// Fallback to placeholder
+	return `${process.env.SUPABASE_URL}/storage/v1/object/public/product-images/placeholders/fish-placeholder.svg`
+}
+
+/**
+ * Legacy function for backward compatibility
  */
 function normalizeImageUrl(imageUrl) {
 	if (!imageUrl) return 'images/fish-placeholder.svg'
@@ -95,7 +113,7 @@ exports.handler = async (event, context) => {
 	try {
 		console.log('Fetching products from database...')
 
-		// Get all active products with categories and images
+		// Get all active products with categories and images (including Supabase Storage data)
 		const { data: products, error } = await supabase
 			.from('products')
 			.select(
@@ -117,7 +135,12 @@ exports.handler = async (event, context) => {
 				product_images (
 					image_url,
 					alt_text,
-					is_primary
+					is_primary,
+					storage_bucket,
+					storage_path,
+					public_url,
+					mime_type,
+					file_size
 				)
 			`
 			)
@@ -173,12 +196,25 @@ exports.handler = async (event, context) => {
 						product.product_images?.[0]
 					const categoryName = product.categories?.name || 'Товары'
 
-					// Normalize image URL
-					const imageUrl = normalizeImageUrl(primaryImage?.image_url)
+					// Get image URL from Supabase Storage or fallback to legacy system
+					let imageUrl
+					if (primaryImage?.storage_path || primaryImage?.public_url) {
+						// Use Supabase Storage
+						imageUrl = getStorageImageUrl(
+							primaryImage.storage_path,
+							primaryImage.public_url
+						)
+					} else {
+						// Fallback to legacy image system
+						imageUrl = normalizeImageUrl(primaryImage?.image_url)
+					}
+
 					console.log('Image processing:', {
 						productName: product.name,
-						rawImageUrl: primaryImage?.image_url,
-						normalizedUrl: imageUrl,
+						storagePath: primaryImage?.storage_path,
+						publicUrl: primaryImage?.public_url,
+						legacyUrl: primaryImage?.image_url,
+						finalUrl: imageUrl,
 					})
 
 					// Validate required fields
