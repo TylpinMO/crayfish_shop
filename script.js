@@ -956,27 +956,31 @@ function initContactForm() {
 // Enhanced add to cart functionality
 function initAddToCart() {
 	// Use event delegation to handle dynamically added buttons
-	document.addEventListener('click', function(e) {
+	document.addEventListener('click', function (e) {
 		if (e.target.closest('.add-to-cart')) {
 			const button = e.target.closest('.add-to-cart')
 			if (button.disabled) return
-			
+
 			const productCard = button.closest('.product-card')
 			const productName = productCard.querySelector('h3').textContent
 			const productPriceElement = productCard.querySelector('.price')
 			const productImage = productCard.querySelector('.product-image img')
 
-			// Extract price number from text 
+			// Extract price number from text
 			const priceText = productPriceElement.textContent
-			const priceMatch = priceText.match(/(\d[\d\s]*)/);
+			const priceMatch = priceText.match(/(\d[\d\s]*)/)
 			const price = priceMatch ? parseInt(priceMatch[1].replace(/\s/g, '')) : 0
 
 			// Create product object
 			const product = {
-				id: productCard.dataset.id || productName.toLowerCase().replace(/\s+/g, '-'),
+				id:
+					productCard.dataset.id ||
+					productName.toLowerCase().replace(/\s+/g, '-'),
 				name: productName,
 				price: price,
-				image: productImage ? productImage.src : '/images/products/crayfish-1.svg',
+				image: productImage
+					? productImage.src
+					: '/images/products/crayfish-1.svg',
 			}
 
 			// Add to cart
@@ -1063,9 +1067,8 @@ function updateProductsOnPage(products) {
 				<div class="no-products-icon">
 					<i class="fas fa-fish"></i>
 				</div>
-				<h3>Товары загружаются...</h3>
-				<p>Добавьте товары через админ панель или выполните SQL из database/sample_products.sql</p>
-				<a href="/admin/" class="btn-admin">Перейти в админку</a>
+				<h3>В данный момент товаров нет, но они скоро появятся</h3>
+				<p>Мы работаем над пополнением ассортимента</p>
 			</div>
 		`
 		return

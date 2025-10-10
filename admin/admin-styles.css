@@ -455,7 +455,7 @@
 
 .product-card-admin:hover {
 	transform: translateY(-2px);
-	box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .product-card-admin .product-image {
@@ -536,28 +536,33 @@
 }
 
 /* ===== EMPTY/ERROR STATES ===== */
-.empty-state, .error-state {
+.empty-state,
+.error-state {
 	text-align: center;
 	padding: 60px 20px;
 	color: var(--admin-text-light);
 }
 
-.empty-state i, .error-state i {
+.empty-state i,
+.error-state i {
 	font-size: 48px;
 	margin-bottom: 16px;
 	color: var(--admin-border);
 }
 
-.empty-state h3, .error-state h3 {
+.empty-state h3,
+.error-state h3 {
 	font-size: 20px;
 	margin-bottom: 8px;
 	color: var(--admin-text);
 }
 
-.empty-state p, .error-state p {
+.empty-state p,
+.error-state p {
 	margin-bottom: 20px;
 }
 
-.empty-state .btn, .error-state .btn {
+.empty-state .btn,
+.error-state .btn {
 	margin-top: 16px;
 }

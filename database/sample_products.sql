@@ -10,33 +10,28 @@ INSERT INTO categories (name, description, sort_order) VALUES
 ('Икра и деликатесы', 'Деликатесная икра и рыбные деликатесы', 3)
 ON CONFLICT (name) DO NOTHING;
 
--- 2. Добавляем товары (получаем ID категорий динамически)
-WITH category_ids AS (
-  SELECT 
-    (SELECT id FROM categories WHERE name = 'Свежая рыба') as fresh_fish_id,
-    (SELECT id FROM categories WHERE name = 'Морепродукты') as seafood_id,
-    (SELECT id FROM categories WHERE name = 'Икра и деликатесы') as caviar_id
-)
-INSERT INTO products (name, description, price, old_price, category_id, stock_quantity, weight, unit, is_featured, is_active, sku, sort_order)
-SELECT * FROM category_ids, (VALUES
-  ('Семга свежая', 'Свежая норвежская семга, богатая омега-3. Идеальна для стейков и суши.', 1200, 1400, fresh_fish_id, 15, 1.0, 'кг', true, true, 'SALMON-001', 1),
-  
-  ('Дорадо целая', 'Средиземноморская дорадо, нежное белое мясо. Отлично для запекания.', 800, NULL, fresh_fish_id, 12, 0.4, 'шт', false, true, 'DORADO-001', 2),
-  
-  ('Тунец стейк', 'Премиальные стейки желтоперого тунца. Для гриля и татаки.', 2200, 2500, fresh_fish_id, 8, 0.2, 'кг', true, true, 'TUNA-001', 3),
-  
-  ('Камчатский краб', 'Варено-мороженые ножки камчатского краба. Деликатес высшего класса.', 4500, NULL, seafood_id, 5, 0.5, 'кг', true, true, 'CRAB-001', 4),
-  
-  ('Креветки тигровые', 'Крупные тигровые креветки. Сладкий вкус и плотная текстура.', 1800, 2000, seafood_id, 20, 0.5, 'кг', false, true, 'SHRIMP-001', 5),
-  
-  ('Мидии черноморские', 'Отборные черноморские мидии в створках. Для классической пасты.', 600, NULL, seafood_id, 25, 1.0, 'кг', false, true, 'MUSSELS-001', 6),
-  
-  ('Икра осетровая', 'Классическая осетровая икра. Традиционный русский деликатес.', 8500, 9000, caviar_id, 3, 0.1, 'банка', true, true, 'CAVIAR-001', 7),
-  
-  ('Икра красная горбуши', 'Икра горбуши первого сорта. Крупные упругие зерна.', 1200, NULL, caviar_id, 10, 0.15, 'банка', false, true, 'CAVIAR-002', 8),
-  
-  ('Копченый лосось', 'Холодного копчения норвежский лосось. Нарезка для бутербродов.', 1800, NULL, caviar_id, 7, 0.2, 'упаковка', false, true, 'SALMON-002', 9)
-) AS t(name, description, price, old_price, category_id, stock_quantity, weight, unit, is_featured, is_active, sku, sort_order);
+-- 2. Добавляем товары (используя прямые подзапросы)
+INSERT INTO products (name, description, price, old_price, category_id, stock_quantity, weight, unit, is_featured, is_active, sku, sort_order) VALUES
+-- Свежая рыба
+('Семга свежая', 'Свежая норвежская семга, богатая омега-3. Идеальна для стейков и суши.', 1200, 1400, (SELECT id FROM categories WHERE name = 'Свежая рыба'), 15, 1.0, 'кг', true, true, 'SALMON-001', 1),
+
+('Дорадо целая', 'Средиземноморская дорадо, нежное белое мясо. Отлично для запекания.', 800, NULL, (SELECT id FROM categories WHERE name = 'Свежая рыба'), 12, 0.4, 'шт', false, true, 'DORADO-001', 2),
+
+('Тунец стейк', 'Премиальные стейки желтоперого тунца. Для гриля и татаки.', 2200, 2500, (SELECT id FROM categories WHERE name = 'Свежая рыба'), 8, 0.2, 'кг', true, true, 'TUNA-001', 3),
+
+-- Морепродукты
+('Камчатский краб', 'Варено-мороженые ножки камчатского краба. Деликатес высшего класса.', 4500, NULL, (SELECT id FROM categories WHERE name = 'Морепродукты'), 5, 0.5, 'кг', true, true, 'CRAB-001', 4),
+
+('Креветки тигровые', 'Крупные тигровые креветки. Сладкий вкус и плотная текстура.', 1800, 2000, (SELECT id FROM categories WHERE name = 'Морепродукты'), 20, 0.5, 'кг', false, true, 'SHRIMP-001', 5),
+
+('Мидии черноморские', 'Отборные черноморские мидии в створках. Для классической пасты.', 600, NULL, (SELECT id FROM categories WHERE name = 'Морепродукты'), 25, 1.0, 'кг', false, true, 'MUSSELS-001', 6),
+
+-- Икра и деликатесы
+('Икра осетровая', 'Классическая осетровая икра. Традиционный русский деликатес.', 8500, 9000, (SELECT id FROM categories WHERE name = 'Икра и деликатесы'), 3, 0.1, 'банка', true, true, 'CAVIAR-001', 7),
+
+('Икра красная горбуши', 'Икра горбуши первого сорта. Крупные упругие зерна.', 1200, NULL, (SELECT id FROM categories WHERE name = 'Икра и деликатесы'), 10, 0.15, 'банка', false, true, 'CAVIAR-002', 8),
+
+('Копченый лосось', 'Холодного копчения норвежский лосось. Нарезка для бутербродов.', 1800, NULL, (SELECT id FROM categories WHERE name = 'Икра и деликатесы'), 7, 0.2, 'упаковка', false, true, 'SALMON-002', 9);
 
 -- 3. Добавляем изображения для товаров
 INSERT INTO product_images (product_id, image_url, alt_text, is_primary, sort_order)

@@ -257,6 +257,12 @@ class AdminUI {
 			document.getElementById('low-stock').textContent =
 				(products.lowStock || 0) + ' заканчивается'
 
+			// Update navigation badge
+			const productsBadge = document.getElementById('products-count')
+			if (productsBadge) {
+				productsBadge.textContent = products.total || '0'
+			}
+
 			// Calculate revenue (placeholder for now)
 			document.getElementById('total-revenue').textContent = '0₽'
 			document.getElementById('revenue-change').textContent = '+0%'
@@ -305,22 +311,30 @@ class AdminUI {
 	async loadProducts() {
 		const grid = document.getElementById('products-grid')
 		grid.innerHTML = '<div class="loading">Загрузка товаров...</div>'
-		
+
 		try {
 			const response = await fetch('/.netlify/functions/products')
 			const data = await response.json()
-			
+
 			if (data.success && data.products.length > 0) {
-				grid.innerHTML = data.products.map(product => `
+				grid.innerHTML = data.products
+					.map(
+						product => `
 					<div class="product-card-admin">
 						<div class="product-image">
-							<img src="${product.image}" alt="${product.name}" onerror="this.src='/images/products/crayfish-1.svg'">
+							<img src="${product.image}" alt="${
+							product.name
+						}" onerror="this.src='/images/products/crayfish-1.svg'">
 						</div>
 						<div class="product-info">
 							<h4>${product.name}</h4>
 							<p class="product-category">${product.category}</p>
 							<div class="product-price">${product.price.toLocaleString()} ₽</div>
-							<div class="product-stock">Остаток: ${product.inStock ? `${product.weight || 0} ${product.unit}` : 'Нет в наличии'}</div>
+							<div class="product-stock">Остаток: ${
+								product.inStock
+									? `${product.weight || 0} ${product.unit}`
+									: 'Нет в наличии'
+							}</div>
 							<div class="product-actions">
 								<button class="btn btn-sm btn-primary edit-product" data-id="${product.id}">
 									<i class="fas fa-edit"></i> Редактировать
@@ -331,7 +345,9 @@ class AdminUI {
 							</div>
 						</div>
 					</div>
-				`).join('')
+				`
+					)
+					.join('')
 			} else {
 				grid.innerHTML = `
 					<div class="empty-state">

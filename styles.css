@@ -878,7 +878,8 @@ html {
 	gap: 10px;
 }
 
-.btn-add-to-cart {
+.btn-add-to-cart,
+.add-to-cart {
 	flex: 1;
 	padding: 14px 24px;
 	background: var(--gradient-primary);
@@ -890,17 +891,35 @@ html {
 	transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 	font-size: 0.95rem;
 	box-shadow: var(--shadow-md);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
 }
 
-.btn-add-to-cart:hover {
+.btn-add-to-cart:hover,
+.add-to-cart:hover {
 	transform: translateY(-3px) scale(1.05);
 	box-shadow: var(--shadow-lg);
 	animation: pulse 0.6s ease;
 }
 
-.btn-add-to-cart:active {
+.btn-add-to-cart:active,
+.add-to-cart:active {
 	transform: translateY(-1px) scale(1.02);
 	transition: all 0.1s ease;
+}
+
+.add-to-cart:disabled {
+	background: #ccc;
+	color: #666;
+	cursor: not-allowed;
+	transform: none;
+}
+
+.add-to-cart:disabled:hover {
+	transform: none;
+	box-shadow: var(--shadow-md);
 }
 
 .btn-quick-order {
