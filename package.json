@@ -1,0 +1,16 @@
+{
+	"name": "fish-shop-netlify-functions",
+	"version": "1.0.0",
+	"description": "Serverless functions for Fish Shop",
+	"main": "index.js",
+	"scripts": {
+		"dev": "netlify dev",
+		"build": "echo 'No build step required'"
+	},
+	"dependencies": {
+		"node-fetch": "^2.6.7"
+	},
+	"devDependencies": {
+		"netlify-cli": "^15.0.0"
+	}
+}

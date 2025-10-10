@@ -69,49 +69,34 @@ class AddressAutocomplete {
 	}
 
 	async getDaDataSuggestions(query) {
-		// Проверяем наличие конфигурации
-		if (
-			!window.CONFIG ||
-			!window.CONFIG.DADATA ||
-			!window.CONFIG.DADATA.TOKEN
-		) {
-			throw new Error('DaData API не настроен. Проверьте файл config.js')
-		}
-
-		const { TOKEN, BASE_URL } = window.CONFIG.DADATA
-
 		try {
-			const response = await fetch(BASE_URL, {
+			// Используем только защищенный API через серверные функции
+			const apiUrl = '/.netlify/functions/address-suggestions'
+
+			const response = await fetch(apiUrl, {
 				method: 'POST',
-				mode: 'cors',
 				headers: {
 					'Content-Type': 'application/json',
-					Accept: 'application/json',
-					Authorization: `Token ${TOKEN}`,
 				},
 				body: JSON.stringify({
 					query: query,
-					// Ограничиваем поиск Ростовской областью
 					locations: [
 						{
 							region: 'Ростовская',
 						},
 					],
-					// Ограничиваем поиск от города до дома
-					from_bound: { value: 'city' },
-					to_bound: { value: 'house' },
-					// Количество подсказок
-					count: 5,
-					// Ограничиваем результаты только актуальными адресами
-					restrict_value: true,
 				}),
 			})
 
 			if (!response.ok) {
-				throw new Error(`DaData API Error: ${response.status}`)
+				throw new Error(`Server API Error: ${response.status}`)
 			}
 
 			const data = await response.json()
+
+			if (data.error) {
+				throw new Error(data.error)
+			}
 
 			if (data && data.suggestions && Array.isArray(data.suggestions)) {
 				return data.suggestions
@@ -122,8 +107,9 @@ class AddressAutocomplete {
 
 			return []
 		} catch (error) {
-			console.warn('DaData API недоступен:', error)
-			throw error
+			console.warn('Address API недоступен. Для работы автокомплита адресов необходим деплой на Netlify:', error)
+			// Возвращаем пустой массив вместо ошибки для лучшего UX
+			return []
 		}
 	}
 
