@@ -14,7 +14,7 @@
 1. Идите в `Site settings` > `Environment variables`
 2. Добавьте переменную:
    - **Name**: `DADATA_TOKEN`
-   - **Value**: ваш токен DaData (например: `0a5759487c07fc6dc5a65061d8df9df8648e1adb`)
+   - **Value**: ваш токен DaData (получите на dadata.ru)
 
 ### 3. Деплой
 

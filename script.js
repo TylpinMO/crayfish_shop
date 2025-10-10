@@ -107,7 +107,10 @@ class AddressAutocomplete {
 
 			return []
 		} catch (error) {
-			console.warn('Address API недоступен. Для работы автокомплита адресов необходим деплой на Netlify:', error)
+			console.warn(
+				'Address API недоступен. Для работы автокомплита адресов необходим деплой на Netlify:',
+				error
+			)
 			// Возвращаем пустой массив вместо ошибки для лучшего UX
 			return []
 		}
