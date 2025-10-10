@@ -144,6 +144,22 @@
 
 		<!-- No Supabase on client - using secure API! -->
 		<!-- Admin Scripts -->
+		<script src="admin-api.js"></script>
+		<script src="admin-auth.js"></script>
 		<script src="admin-ui.js"></script>
+
+		<!-- Initialize Admin Panel -->
+		<script>
+			document.addEventListener('DOMContentLoaded', () => {
+				// Initialize API first
+				window.adminAPI = new AdminAPI()
+
+				// Then Auth (depends on API)
+				window.adminAuth = new AdminAuth()
+
+				// Finally UI (depends on Auth)
+				window.adminUI = new AdminUI()
+			})
+		</script>
 	</body>
 </html>
