@@ -1,3 +1,461 @@
+// Loading Screen
+function initLoadingScreen() {
+	const loadingScreen = document.getElementById('loading-screen')
+
+	// Simulate loading time
+	setTimeout(() => {
+		loadingScreen.classList.add('fade-out')
+		setTimeout(() => {
+			loadingScreen.style.display = 'none'
+		}, 500)
+	}, 2000) // Show loading for 2 seconds
+}
+
+// Address Autocomplete (FIAS API integration)
+class AddressAutocomplete {
+	constructor(inputId, suggestionsId) {
+		this.input = document.getElementById(inputId)
+		this.suggestions = document.getElementById(suggestionsId)
+		this.selectedIndex = -1
+		this.currentSuggestions = []
+		this.searchTimeout = null
+
+		if (this.input) {
+			this.bindEvents()
+		}
+	}
+
+	bindEvents() {
+		this.input.addEventListener('input', e => this.handleInput(e))
+		this.input.addEventListener('keydown', e => this.handleKeydown(e))
+		document.addEventListener('click', e => this.handleDocumentClick(e))
+	}
+
+	async handleInput(e) {
+		const query = e.target.value.trim()
+
+		if (query.length < 3) {
+			this.hideSuggestions()
+			return
+		}
+
+		// Clear previous timeout
+		if (this.searchTimeout) {
+			clearTimeout(this.searchTimeout)
+		}
+
+		// Debounce search requests
+		this.searchTimeout = setTimeout(async () => {
+			// Показать индикатор загрузки
+			this.showLoading()
+
+			try {
+				// Используем DaData API для получения подсказок адресов
+				const suggestions = await this.getDaDataSuggestions(query)
+
+				if (suggestions && suggestions.length > 0) {
+					console.log(`Найдено ${suggestions.length} адресов через DaData`)
+					this.showSuggestions(suggestions)
+				} else {
+					this.showError('Адреса не найдены. Попробуйте изменить запрос.')
+				}
+			} catch (error) {
+				console.error('Ошибка получения адресов:', error)
+				this.showError(
+					'Не удалось загрузить адреса. Проверьте подключение к интернету.'
+				)
+			}
+		}, 300)
+	}
+
+	async getDaDataSuggestions(query) {
+		// Проверяем наличие конфигурации
+		if (
+			!window.CONFIG ||
+			!window.CONFIG.DADATA ||
+			!window.CONFIG.DADATA.TOKEN
+		) {
+			throw new Error('DaData API не настроен. Проверьте файл config.js')
+		}
+
+		const { TOKEN, BASE_URL } = window.CONFIG.DADATA
+
+		try {
+			const response = await fetch(BASE_URL, {
+				method: 'POST',
+				mode: 'cors',
+				headers: {
+					'Content-Type': 'application/json',
+					Accept: 'application/json',
+					Authorization: `Token ${TOKEN}`,
+				},
+				body: JSON.stringify({
+					query: query,
+					// Ограничиваем поиск Ростовской областью
+					locations: [
+						{
+							region: 'Ростовская',
+						},
+					],
+					// Ограничиваем поиск от города до дома
+					from_bound: { value: 'city' },
+					to_bound: { value: 'house' },
+					// Количество подсказок
+					count: 5,
+					// Ограничиваем результаты только актуальными адресами
+					restrict_value: true,
+				}),
+			})
+
+			if (!response.ok) {
+				throw new Error(`DaData API Error: ${response.status}`)
+			}
+
+			const data = await response.json()
+
+			if (data && data.suggestions && Array.isArray(data.suggestions)) {
+				return data.suggestions
+					.map(item => item.value)
+					.filter(addr => addr && addr.includes('Ростов'))
+					.slice(0, 5)
+			}
+
+			return []
+		} catch (error) {
+			console.warn('DaData API недоступен:', error)
+			throw error
+		}
+	}
+
+	showLoading() {
+		this.suggestions.innerHTML = `
+			<div class="address-loading">
+				<i class="fas fa-spinner fa-spin"></i>
+			</div>
+		`
+		this.suggestions.style.display = 'block'
+	}
+
+	showError(message) {
+		this.suggestions.innerHTML = `
+			<div class="address-error">
+				<i class="fas fa-exclamation-triangle"></i>
+				${message}
+			</div>
+		`
+		this.suggestions.style.display = 'block'
+
+		// Скрыть ошибку через 3 секунды
+		setTimeout(() => {
+			this.hideSuggestions()
+		}, 3000)
+	}
+
+	showSuggestions(suggestions) {
+		this.currentSuggestions = suggestions
+		this.suggestions.innerHTML = ''
+
+		if (suggestions.length === 0) {
+			this.hideSuggestions()
+			return
+		}
+
+		suggestions.forEach((suggestion, index) => {
+			const div = document.createElement('div')
+			div.className = 'address-suggestion'
+			div.textContent = suggestion
+			div.addEventListener('click', () => this.selectSuggestion(suggestion))
+			this.suggestions.appendChild(div)
+		})
+
+		this.suggestions.style.display = 'block'
+		this.selectedIndex = -1
+	}
+
+	hideSuggestions() {
+		this.suggestions.style.display = 'none'
+		this.selectedIndex = -1
+	}
+
+	selectSuggestion(suggestion) {
+		this.input.value = suggestion
+		this.hideSuggestions()
+	}
+
+	handleKeydown(e) {
+		if (this.suggestions.style.display === 'none') return
+
+		switch (e.key) {
+			case 'ArrowDown':
+				e.preventDefault()
+				this.selectedIndex = Math.min(
+					this.selectedIndex + 1,
+					this.currentSuggestions.length - 1
+				)
+				this.highlightSuggestion()
+				break
+			case 'ArrowUp':
+				e.preventDefault()
+				this.selectedIndex = Math.max(this.selectedIndex - 1, -1)
+				this.highlightSuggestion()
+				break
+			case 'Enter':
+				e.preventDefault()
+				if (this.selectedIndex >= 0) {
+					this.selectSuggestion(this.currentSuggestions[this.selectedIndex])
+				}
+				break
+			case 'Escape':
+				this.hideSuggestions()
+				break
+		}
+	}
+
+	highlightSuggestion() {
+		const suggestions = this.suggestions.querySelectorAll('.address-suggestion')
+		suggestions.forEach((s, index) => {
+			s.classList.toggle('selected', index === this.selectedIndex)
+		})
+	}
+
+	handleDocumentClick(e) {
+		if (
+			!this.input.contains(e.target) &&
+			!this.suggestions.contains(e.target)
+		) {
+			this.hideSuggestions()
+		}
+	}
+}
+
+// Phone validation utility
+class PhoneValidator {
+	constructor(inputElement) {
+		this.input = inputElement
+		if (this.input) {
+			this.bindEvents()
+		}
+	}
+
+	bindEvents() {
+		this.input.addEventListener('input', e => this.handleInput(e))
+		this.input.addEventListener('keydown', e => this.handleKeydown(e))
+	}
+
+	handleInput(e) {
+		const input = e.target
+		const value = input.value
+		const formattedValue = PhoneValidator.formatAsYouType(value)
+
+		if (formattedValue !== value) {
+			const cursorPosition = input.selectionStart
+			input.value = formattedValue
+			// Restore cursor position
+			input.setSelectionRange(cursorPosition, cursorPosition)
+		}
+	}
+
+	handleKeydown(e) {
+		// Allow: backspace, delete, tab, escape, enter
+		if (
+			[8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||
+			// Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+			(e.keyCode === 65 && e.ctrlKey === true) ||
+			(e.keyCode === 67 && e.ctrlKey === true) ||
+			(e.keyCode === 86 && e.ctrlKey === true) ||
+			(e.keyCode === 88 && e.ctrlKey === true) ||
+			// Allow: home, end, left, right
+			(e.keyCode >= 35 && e.keyCode <= 39)
+		) {
+			return
+		}
+		// Ensure that it is a number and stop the keypress
+		if (
+			(e.shiftKey || e.keyCode < 48 || e.keyCode > 57) &&
+			(e.keyCode < 96 || e.keyCode > 105)
+		) {
+			e.preventDefault()
+		}
+	}
+
+	static formatAsYouType(phone) {
+		// Remove all non-digits
+		const digits = phone.replace(/\D/g, '')
+
+		// Don't format if too short
+		if (digits.length < 1) return ''
+
+		// Format based on length
+		if (digits.length <= 1) {
+			return '+7 ('
+		} else if (digits.length <= 4) {
+			return `+7 (${digits.slice(0, 3)}`
+		} else if (digits.length <= 7) {
+			return `+7 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}`
+		} else if (digits.length <= 9) {
+			return `+7 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(
+				6,
+				8
+			)}`
+		} else if (digits.length <= 11) {
+			return `+7 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(
+				6,
+				8
+			)}-${digits.slice(8, 10)}`
+		}
+
+		// If more than 11 digits, truncate
+		return `+7 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(
+			6,
+			8
+		)}-${digits.slice(8, 10)}`
+	}
+
+	static formatPhone(phone) {
+		// Remove all non-digits
+		const digits = phone.replace(/\D/g, '')
+
+		// Handle different input formats and convert to standard format
+		let cleanDigits = digits
+
+		// Remove country code if present
+		if (
+			cleanDigits.length === 11 &&
+			(cleanDigits[0] === '7' || cleanDigits[0] === '8')
+		) {
+			cleanDigits = cleanDigits.slice(1)
+		}
+
+		// Format as +7 (XXX) XXX-XX-XX
+		if (cleanDigits.length === 10) {
+			return `+7 (${cleanDigits.slice(0, 3)}) ${cleanDigits.slice(
+				3,
+				6
+			)}-${cleanDigits.slice(6, 8)}-${cleanDigits.slice(8, 10)}`
+		}
+
+		return phone // Return original if can't format
+	}
+
+	static validatePhone(phone) {
+		const digits = phone.replace(/\D/g, '')
+
+		// Must be exactly 10 digits (without country code) or 11 digits (with 7 or 8)
+		if (digits.length === 10) {
+			return true
+		} else if (
+			digits.length === 11 &&
+			(digits[0] === '7' || digits[0] === '8')
+		) {
+			return true
+		}
+
+		return false
+	}
+
+	static isValidRussianMobile(phone) {
+		const digits = phone.replace(/\D/g, '')
+		let phoneNumber = digits
+
+		// Convert to format starting with 7
+		if (phoneNumber.length === 11 && phoneNumber[0] === '8') {
+			phoneNumber = '7' + phoneNumber.slice(1)
+		} else if (phoneNumber.length === 10) {
+			phoneNumber = '7' + phoneNumber
+		}
+
+		// Check length
+		if (phoneNumber.length !== 11 || phoneNumber[0] !== '7') {
+			return false
+		}
+
+		// Check if it's a valid Russian mobile number prefix
+		const validPrefixes = [
+			'900',
+			'901',
+			'902',
+			'903',
+			'904',
+			'905',
+			'906',
+			'908',
+			'909',
+			'910',
+			'911',
+			'912',
+			'913',
+			'914',
+			'915',
+			'916',
+			'917',
+			'918',
+			'919',
+			'920',
+			'921',
+			'922',
+			'923',
+			'924',
+			'925',
+			'926',
+			'927',
+			'928',
+			'929',
+			'930',
+			'931',
+			'932',
+			'933',
+			'934',
+			'936',
+			'937',
+			'938',
+			'939',
+			'950',
+			'951',
+			'952',
+			'953',
+			'954',
+			'955',
+			'956',
+			'958',
+			'960',
+			'961',
+			'962',
+			'963',
+			'964',
+			'965',
+			'966',
+			'967',
+			'968',
+			'969',
+			'970',
+			'971',
+			'977',
+			'978',
+			'980',
+			'981',
+			'982',
+			'983',
+			'984',
+			'985',
+			'986',
+			'987',
+			'988',
+			'989',
+			'991',
+			'992',
+			'993',
+			'994',
+			'995',
+			'996',
+			'997',
+			'999',
+		]
+
+		const prefix = phoneNumber.slice(1, 4)
+		return validPrefixes.includes(prefix)
+	}
+}
+
 // Shopping Cart System
 class ShoppingCart {
 	constructor() {
@@ -22,14 +480,36 @@ class ShoppingCart {
 		const cartToggle = document.getElementById('cart-toggle')
 		const closeCart = document.getElementById('close-cart')
 		const cartOverlay = document.getElementById('cart-overlay')
-		const checkoutBtn = document.getElementById('checkout-btn')
+		const showCheckoutForm = document.getElementById('show-checkout-form')
+		const backToCart = document.getElementById('back-to-cart')
+		const orderForm = document.getElementById('order-form')
+
+		// Payment and change handling
+		const paymentSelect = document.getElementById('payment-select')
+		const needChangeCheckbox = document.getElementById('need-change')
+
+		// Initialize phone validator for checkout form
+		const checkoutPhoneInput = document.getElementById('phone-input')
+		if (checkoutPhoneInput) {
+			new PhoneValidator(checkoutPhoneInput)
+		}
 
 		if (cartToggle) cartToggle.addEventListener('click', () => this.openCart())
 		if (closeCart) closeCart.addEventListener('click', () => this.closeCart())
 		if (cartOverlay)
 			cartOverlay.addEventListener('click', () => this.closeCart())
-		if (checkoutBtn)
-			checkoutBtn.addEventListener('click', () => this.checkout())
+		if (showCheckoutForm)
+			showCheckoutForm.addEventListener('click', () => this.showCheckoutForm())
+		if (backToCart)
+			backToCart.addEventListener('click', () => this.hideCheckoutForm())
+		if (orderForm)
+			orderForm.addEventListener('submit', e => this.processOrder(e))
+		if (paymentSelect)
+			paymentSelect.addEventListener('change', e => this.handlePaymentChange(e))
+		if (needChangeCheckbox)
+			needChangeCheckbox.addEventListener('change', e =>
+				this.handleChangeToggle(e)
+			)
 	}
 
 	openCart() {
@@ -169,23 +649,119 @@ class ShoppingCart {
 		if (totalElement) totalElement.textContent = `${total}₽`
 	}
 
-	checkout() {
+	showCheckoutForm() {
 		if (this.items.length === 0) {
 			this.showNotification('Корзина пуста!', 'warning')
 			return
 		}
 
-		const total = this.getTotalWithDelivery()
+		const cartSummary = document.getElementById('cart-summary')
+		const checkoutForm = document.getElementById('checkout-form')
+
+		if (cartSummary) cartSummary.classList.add('hidden')
+		if (checkoutForm) checkoutForm.classList.remove('hidden')
+	}
+
+	hideCheckoutForm() {
+		const cartSummary = document.getElementById('cart-summary')
+		const checkoutForm = document.getElementById('checkout-form')
+
+		if (cartSummary) cartSummary.classList.remove('hidden')
+		if (checkoutForm) checkoutForm.classList.add('hidden')
+	}
+
+	handlePaymentChange(e) {
+		const paymentMethod = e.target.value
+		const cashChangeGroup = document.getElementById('cash-change-group')
+
+		if (paymentMethod === 'cash') {
+			cashChangeGroup.classList.remove('hidden')
+		} else {
+			cashChangeGroup.classList.add('hidden')
+			// Reset change fields
+			const needChangeCheckbox = document.getElementById('need-change')
+			const changeAmountGroup = document.getElementById('change-amount-group')
+			if (needChangeCheckbox) needChangeCheckbox.checked = false
+			if (changeAmountGroup) changeAmountGroup.classList.add('hidden')
+		}
+	}
+
+	handleChangeToggle(e) {
+		const changeAmountGroup = document.getElementById('change-amount-group')
+		const changeAmountInput = document.getElementById('change-amount')
+
+		if (e.target.checked) {
+			changeAmountGroup.classList.remove('hidden')
+			changeAmountInput.focus()
+		} else {
+			changeAmountGroup.classList.add('hidden')
+			changeAmountInput.value = ''
+		}
+	}
+
+	processOrder(e) {
+		e.preventDefault()
+
+		const formData = new FormData(e.target)
+		const orderData = {
+			name: formData.get('name'),
+			phone: formData.get('phone'),
+			address: formData.get('address'),
+			payment: formData.get('payment'),
+			comment: formData.get('comment'),
+			needChange: formData.get('needChange') === 'on',
+			changeAmount: formData.get('changeAmount'),
+			items: this.items,
+			total: this.getTotalWithDelivery(),
+		}
+
+		// Validate phone number
+		if (!PhoneValidator.validatePhone(orderData.phone)) {
+			this.showNotification(
+				'Пожалуйста, введите корректный номер телефона',
+				'warning'
+			)
+			return
+		}
+
+		if (!PhoneValidator.isValidRussianMobile(orderData.phone)) {
+			this.showNotification(
+				'Пожалуйста, введите корректный российский мобильный номер',
+				'warning'
+			)
+			return
+		}
+
+		// Format phone number
+		orderData.phone = PhoneValidator.formatPhone(orderData.phone)
+
+		// Validate change amount if needed
+		if (orderData.payment === 'cash' && orderData.needChange) {
+			const changeAmount = parseFloat(orderData.changeAmount)
+			if (!changeAmount || changeAmount <= orderData.total) {
+				this.showNotification(
+					'Сумма для сдачи должна быть больше стоимости заказа',
+					'warning'
+				)
+				return
+			}
+		}
+
+		// Simulate order processing
 		this.showNotification(
-			`Заказ на сумму ${total}₽ оформлен! Мы свяжемся с вами в ближайшее время.`,
+			`Заказ на сумму ${orderData.total}₽ принят! Мы свяжемся с вами в течение 15 минут для подтверждения.`,
 			'success'
 		)
 
-		// Clear cart
+		// Clear cart and close
 		this.items = []
 		this.saveCart()
 		this.updateCartUI()
+		this.hideCheckoutForm()
 		this.closeCart()
+
+		// Reset form
+		e.target.reset()
 	}
 
 	showNotification(message, type = 'info') {
@@ -345,6 +921,12 @@ function initContactForm() {
 	const contactForm = document.getElementById('contact-form')
 	if (!contactForm) return
 
+	// Initialize phone validator for contact form
+	const phoneInput = contactForm.querySelector('input[name="phone"]')
+	if (phoneInput) {
+		new PhoneValidator(phoneInput)
+	}
+
 	contactForm.addEventListener('submit', function (e) {
 		e.preventDefault()
 
@@ -353,10 +935,19 @@ function initContactForm() {
 		const phone = formData.get('phone')
 		const message = formData.get('message')
 
-		// Simple validation
+		// Enhanced validation
 		if (!name || !phone) {
 			cart.showNotification(
 				'Пожалуйста, заполните все обязательные поля',
+				'warning'
+			)
+			return
+		}
+
+		// Validate phone number
+		if (phone && !PhoneValidator.isValidRussianMobile(phone)) {
+			cart.showNotification(
+				'Пожалуйста, введите корректный номер мобильного телефона',
 				'warning'
 			)
 			return
@@ -452,6 +1043,13 @@ function initAddToCart() {
 
 // Initialize all functionality when DOM is loaded
 document.addEventListener('DOMContentLoaded', function () {
+	// Initialize loading screen
+	initLoadingScreen()
+
+	// Initialize address autocomplete
+	new AddressAutocomplete('address-input', 'address-suggestions')
+
+	// Initialize other functionality
 	initGallery()
 	initNavigation()
 	initContactForm()

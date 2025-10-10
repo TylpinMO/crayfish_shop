@@ -15,6 +15,19 @@
 		/>
 	</head>
 	<body>
+		<!-- Loading Screen -->
+		<div class="loading-screen" id="loading-screen">
+			<div class="loading-content">
+				<div class="loading-shrimp">
+					<i class="fas fa-shrimp"></i>
+				</div>
+				<div class="loading-text">
+					<h2>РакоМаркет</h2>
+					<p>Загружаем свежие морепродукты...</p>
+				</div>
+			</div>
+		</div>
+
 		<!-- Navigation -->
 		<nav class="navbar">
 			<div class="nav-container">
@@ -389,55 +402,56 @@
 			<div class="container">
 				<div class="section-header">
 					<h2>Свяжитесь с нами</h2>
-					<p>Готовы принять ваш заказ</p>
+					<p>Мы всегда готовы ответить на ваши вопросы</p>
 				</div>
-				<div class="contact-content">
-					<div class="contact-info">
-						<div class="contact-item">
-							<div class="contact-icon">
-								<i class="fas fa-phone"></i>
-							</div>
-							<div class="contact-details">
-								<h3>Телефон</h3>
-								<p>+7 (495) 123-45-67</p>
-								<p>+7 (901) 234-56-78</p>
-							</div>
+
+				<!-- Contact Info Cards -->
+				<div class="contact-cards">
+					<div class="contact-card">
+						<div class="contact-icon">
+							<i class="fas fa-phone"></i>
 						</div>
-						<div class="contact-item">
-							<div class="contact-icon">
-								<i class="fas fa-envelope"></i>
-							</div>
-							<div class="contact-details">
-								<h3>Email</h3>
-								<p>info@rakomarket.ru</p>
-								<p>orders@rakomarket.ru</p>
-							</div>
-						</div>
-						<div class="contact-item">
-							<div class="contact-icon">
-								<i class="fas fa-map-marker-alt"></i>
-							</div>
-							<div class="contact-details">
-								<h3>Адрес</h3>
-								<p>ул. Береговая, 25</p>
-								<p>Ростов-на-Дону, 344000</p>
-							</div>
-						</div>
-						<div class="contact-item">
-							<div class="contact-icon">
-								<i class="fas fa-clock"></i>
-							</div>
-							<div class="contact-details">
-								<h3>Режим работы</h3>
-								<p>Пн-Пт: 8:00 - 22:00</p>
-								<p>Сб-Вс: 9:00 - 21:00</p>
-							</div>
-						</div>
+						<h3>Телефон</h3>
+						<p>+7 (863) 123-45-67</p>
+						<p>+7 (901) 234-56-78</p>
+						<small>Звонки принимаем ежедневно</small>
 					</div>
 
-					<!-- Map Section -->
-					<div class="map-container">
-						<h3>Как нас найти</h3>
+					<div class="contact-card">
+						<div class="contact-icon">
+							<i class="fas fa-envelope"></i>
+						</div>
+						<h3>Email</h3>
+						<p>info@rakomarket.ru</p>
+						<p>support@rakomarket.ru</p>
+						<small>Ответим в течение часа</small>
+					</div>
+
+					<div class="contact-card">
+						<div class="contact-icon">
+							<i class="fas fa-map-marker-alt"></i>
+						</div>
+						<h3>Адрес</h3>
+						<p>ул. Береговая, 25</p>
+						<p>Ростов-на-Дону, 344000</p>
+						<small>Рядом с набережной</small>
+					</div>
+
+					<div class="contact-card">
+						<div class="contact-icon">
+							<i class="fas fa-clock"></i>
+						</div>
+						<h3>Режим работы</h3>
+						<p>Пн-Пт: 8:00 - 22:00</p>
+						<p>Сб-Вс: 9:00 - 21:00</p>
+						<small>Доставка до 21:00</small>
+					</div>
+				</div>
+
+				<!-- Map and Feedback Form -->
+				<div class="contact-bottom">
+					<div class="map-section">
+						<h3>Наше расположение</h3>
 						<div class="map-wrapper">
 							<iframe
 								src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2709.2434!2d39.7018!3d47.2357!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDfCsDE0JzA4LjUiTiAzOcKwNDInMDYuNSJF!5e0!3m2!1sru!2sru!4v1697727600000!5m2!1sru!2sru"
@@ -452,41 +466,60 @@
 						</div>
 					</div>
 
-					<div class="contact-form">
-						<h3>Оставить заявку</h3>
+					<div class="feedback-form">
+						<h3>Есть вопросы?</h3>
 						<p class="form-description">
-							Оплата наличными или картой при получении
+							<i class="fas fa-info-circle"></i>
+							Для заказов используйте корзину. Здесь вы можете задать любые
+							вопросы или оставить отзыв
 						</p>
 						<form id="contact-form">
-							<div class="form-group">
-								<input
-									type="text"
-									name="name"
-									placeholder="Ваше имя *"
-									required
-								/>
+							<div class="form-row">
+								<div class="form-group">
+									<input
+										type="text"
+										name="name"
+										placeholder="Ваше имя *"
+										required
+									/>
+								</div>
+								<div class="form-group">
+									<input
+										type="tel"
+										name="phone"
+										placeholder="Телефон *"
+										required
+									/>
+								</div>
 							</div>
 							<div class="form-group">
 								<input
-									type="tel"
-									name="phone"
-									placeholder="Телефон *"
-									required
+									type="email"
+									name="email"
+									placeholder="Email (необязательно)"
 								/>
 							</div>
 							<div class="form-group">
-								<input type="email" name="email" placeholder="Email" />
+								<select name="subject" required>
+									<option value="">Тема обращения *</option>
+									<option value="question">Общий вопрос</option>
+									<option value="complaint">Жалоба</option>
+									<option value="suggestion">Предложение</option>
+									<option value="partnership">Сотрудничество</option>
+									<option value="other">Другое</option>
+								</select>
 							</div>
 							<div class="form-group">
 								<textarea
 									name="message"
-									placeholder="Ваш заказ или вопрос"
-									rows="5"
+									placeholder="Ваше сообщение *"
+									rows="4"
+									required
 								></textarea>
 							</div>
 							<button type="submit" class="btn btn-primary">
 								<i class="fas fa-paper-plane"></i>
-								Отправить заявку
+								Отправить сообщение
 							</button>
 						</form>
 					</div>
@@ -567,30 +600,114 @@
 				</div>
 			</div>
 			<div class="cart-footer">
-				<div class="cart-total">
-					<div class="total-row">
-						<span>Товары:</span>
-						<span id="cart-subtotal">0₽</span>
+				<div class="cart-summary" id="cart-summary">
+					<div class="cart-total">
+						<div class="total-row">
+							<span>Товары:</span>
+							<span id="cart-subtotal">0₽</span>
+						</div>
+						<div class="total-row">
+							<span>Доставка:</span>
+							<span id="cart-delivery">300₽</span>
+						</div>
+						<div class="total-row total-final">
+							<span>Итого:</span>
+							<span id="cart-total">300₽</span>
+						</div>
 					</div>
-					<div class="total-row">
-						<span>Доставка:</span>
-						<span id="cart-delivery">300₽</span>
-					</div>
-					<div class="total-row total-final">
-						<span>Итого:</span>
-						<span id="cart-total">300₽</span>
-					</div>
+					<button class="cart-checkout" id="show-checkout-form">
+						<i class="fas fa-shopping-bag"></i>
+						Оформить заказ
+					</button>
 				</div>
-				<button class="cart-checkout" id="checkout-btn">
-					<i class="fas fa-credit-card"></i>
-					Оформить заказ
-				</button>
+
+				<div class="checkout-form hidden" id="checkout-form">
+					<h4>Данные для заказа</h4>
+					<form id="order-form">
+						<div class="form-row">
+							<div class="form-group">
+								<input
+									type="text"
+									name="name"
+									placeholder="Ваше имя *"
+									required
+								/>
+							</div>
+							<div class="form-group">
+								<input
+									type="tel"
+									name="phone"
+									placeholder="Телефон *"
+									required
+								/>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="address-input-container">
+								<input
+									type="text"
+									name="address"
+									id="address-input"
+									placeholder="Адрес доставки *"
+									required
+									autocomplete="off"
+								/>
+								<div class="address-suggestions" id="address-suggestions"></div>
+							</div>
+						</div>
+						<div class="form-group">
+							<select name="payment" id="payment-select" required>
+								<option value="">Способ оплаты *</option>
+								<option value="cash">Наличными при получении</option>
+								<option value="card">Картой при получении</option>
+							</select>
+						</div>
+						<div
+							class="form-group cash-change-group hidden"
+							id="cash-change-group"
+						>
+							<label class="checkbox-label">
+								<input type="checkbox" name="needChange" id="need-change" />
+								<span class="checkmark"></span>
+								Нужна сдача
+							</label>
+							<div class="change-amount-group hidden" id="change-amount-group">
+								<input
+									type="number"
+									name="changeAmount"
+									id="change-amount"
+									placeholder="С какой суммы приготовить сдачу?"
+									min="1"
+								/>
+							</div>
+						</div>
+						<div class="form-group">
+							<textarea
+								name="comment"
+								placeholder="Комментарий к заказу"
+								rows="3"
+							></textarea>
+						</div>
+						<div class="checkout-actions">
+							<button type="button" class="btn-back" id="back-to-cart">
+								<i class="fas fa-arrow-left"></i>
+								Назад
+							</button>
+							<button type="submit" class="btn-order" id="confirm-order">
+								<i class="fas fa-check"></i>
+								Подтвердить заказ
+							</button>
+						</div>
+					</form>
+				</div>
 			</div>
 		</div>
 
 		<!-- Cart Overlay -->
 		<div class="cart-overlay" id="cart-overlay"></div>
 
+		<!-- Подключение конфигурации (должен быть до основного скрипта) -->
+		<script src="config.js"></script>
 		<script src="script.js"></script>
 	</body>
 </html>
