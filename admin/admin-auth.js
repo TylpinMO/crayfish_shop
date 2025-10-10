@@ -36,17 +36,23 @@ class AdminAuth {
 	}
 	async login(email, password) {
 		try {
-			const { data, error } = await this.supabase.auth.signInWithPassword({
-				email,
-				password,
+			// Use serverless function instead of direct Supabase
+			const result = await window.adminAPI.request('/admin-auth', {
+				method: 'POST',
+				body: { action: 'login', email, password }
 			})
 
-			if (error) {
-				throw error
+			if (result.success) {
+				// Store token and user data
+				window.adminAPI.setToken(result.token)
+				this.currentUser = result.user
+				
+				this.showNotification('Успешный вход в систему', 'success')
+				this.showAdminPanel()
+				return { success: true, user: result.user }
+			} else {
+				throw new Error(result.error || 'Неверные данные для входа')
 			}
-
-			this.showNotification('Успешный вход в систему', 'success')
-			return { success: true, user: data.user }
 		} catch (error) {
 			console.error('Login error:', error)
 			this.showNotification('Ошибка входа: ' + error.message, 'error')
@@ -56,10 +62,12 @@ class AdminAuth {
 
 	async logout() {
 		try {
-			const { error } = await this.supabase.auth.signOut()
-			if (error) throw error
-
+			// Clear local token and user data
+			window.adminAPI.removeToken()
+			this.currentUser = null
+			
 			this.showNotification('Выход выполнен', 'success')
+			this.showLoginForm()
 		} catch (error) {
 			console.error('Logout error:', error)
 			this.showNotification('Ошибка выхода: ' + error.message, 'error')
