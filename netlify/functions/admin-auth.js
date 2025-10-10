@@ -94,6 +94,7 @@ async function handleLogin(email, password, headers) {
 		console.log('Database query result:', { adminUser, error })
 
 		if (error || !adminUser) {
+			console.log('Admin user not found or error occurred')
 			return {
 				statusCode: 401,
 				headers,
@@ -101,18 +102,36 @@ async function handleLogin(email, password, headers) {
 			}
 		}
 
+		console.log('Verifying password...')
+		console.log('Password provided:', password)
+		console.log('Stored hash:', adminUser.password_hash)
+		
 		// Verify password
-		const isValidPassword = await bcrypt.compare(
-			password,
-			adminUser.password_hash
-		)
-		if (!isValidPassword) {
+		try {
+			const isValidPassword = await bcrypt.compare(
+				password,
+				adminUser.password_hash
+			)
+			console.log('Password verification result:', isValidPassword)
+			
+			if (!isValidPassword) {
+				console.log('Password verification failed')
+				return {
+					statusCode: 401,
+					headers,
+					body: JSON.stringify({ error: 'Неверные данные для входа' }),
+				}
+			}
+		} catch (bcryptError) {
+			console.error('Bcrypt error:', bcryptError)
 			return {
-				statusCode: 401,
+				statusCode: 500,
 				headers,
-				body: JSON.stringify({ error: 'Неверные данные для входа' }),
+				body: JSON.stringify({ error: 'Ошибка проверки пароля' }),
 			}
 		}
+
+		console.log('Password verified successfully, generating JWT...')
 
 		// Update last login
 		await supabase
