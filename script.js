@@ -955,40 +955,43 @@ function initContactForm() {
 
 // Enhanced add to cart functionality
 function initAddToCart() {
-	document.querySelectorAll('.btn-add-to-cart').forEach(button => {
-		button.addEventListener('click', function () {
-			const productCard = this.closest('.product-card')
+	// Use event delegation to handle dynamically added buttons
+	document.addEventListener('click', function(e) {
+		if (e.target.closest('.add-to-cart')) {
+			const button = e.target.closest('.add-to-cart')
+			if (button.disabled) return
+			
+			const productCard = button.closest('.product-card')
 			const productName = productCard.querySelector('h3').textContent
-			const productPriceText =
-				productCard.querySelector('.product-price').textContent
-			const productImages = productCard.querySelectorAll('.product-image')
-			const productImage = productImages.length > 0 ? productImages[0].src : ''
+			const productPriceElement = productCard.querySelector('.price')
+			const productImage = productCard.querySelector('.product-image img')
 
-			// Extract price number from text (e.g., "от 800₽/кг" -> 800)
-			const priceMatch = productPriceText.match(/(\d+)/)
-			const price = priceMatch ? parseInt(priceMatch[1]) : 0
+			// Extract price number from text 
+			const priceText = productPriceElement.textContent
+			const priceMatch = priceText.match(/(\d[\d\s]*)/);
+			const price = priceMatch ? parseInt(priceMatch[1].replace(/\s/g, '')) : 0
 
 			// Create product object
 			const product = {
-				id: productName.toLowerCase().replace(/\s+/g, '-'),
+				id: productCard.dataset.id || productName.toLowerCase().replace(/\s+/g, '-'),
 				name: productName,
 				price: price,
-				image: productImage,
+				image: productImage ? productImage.src : '/images/products/crayfish-1.svg',
 			}
 
 			// Add to cart
 			cart.addItem(product)
 
 			// Animation effect
-			const originalText = this.textContent
-			this.textContent = 'Добавлено!'
-			this.style.background = '#27ae60'
+			const originalText = button.textContent
+			button.textContent = 'Добавлено!'
+			button.style.background = '#27ae60'
 
 			setTimeout(() => {
-				this.textContent = originalText
-				this.style.background = ''
+				button.textContent = originalText
+				button.style.background = ''
 			}, 2000)
-		})
+		}
 	})
 
 	// Quick order functionality

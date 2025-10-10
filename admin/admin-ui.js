@@ -303,14 +303,57 @@ class AdminUI {
 	}
 
 	async loadProducts() {
-		// Placeholder - будет реализовано в следующей итерации
-		document.getElementById('products-grid').innerHTML = `
-            <div class="demo-message">
-                <i class="fas fa-fish"></i>
-                <p>Управление товарами будет доступно после настройки API</p>
-                <small>Итерация 2: CRUD товаров</small>
-            </div>
-        `
+		const grid = document.getElementById('products-grid')
+		grid.innerHTML = '<div class="loading">Загрузка товаров...</div>'
+		
+		try {
+			const response = await fetch('/.netlify/functions/products')
+			const data = await response.json()
+			
+			if (data.success && data.products.length > 0) {
+				grid.innerHTML = data.products.map(product => `
+					<div class="product-card-admin">
+						<div class="product-image">
+							<img src="${product.image}" alt="${product.name}" onerror="this.src='/images/products/crayfish-1.svg'">
+						</div>
+						<div class="product-info">
+							<h4>${product.name}</h4>
+							<p class="product-category">${product.category}</p>
+							<div class="product-price">${product.price.toLocaleString()} ₽</div>
+							<div class="product-stock">Остаток: ${product.inStock ? `${product.weight || 0} ${product.unit}` : 'Нет в наличии'}</div>
+							<div class="product-actions">
+								<button class="btn btn-sm btn-primary edit-product" data-id="${product.id}">
+									<i class="fas fa-edit"></i> Редактировать
+								</button>
+								<button class="btn btn-sm btn-danger delete-product" data-id="${product.id}">
+									<i class="fas fa-trash"></i> Удалить
+								</button>
+							</div>
+						</div>
+					</div>
+				`).join('')
+			} else {
+				grid.innerHTML = `
+					<div class="empty-state">
+						<i class="fas fa-fish"></i>
+						<h3>Товары не найдены</h3>
+						<p>Добавьте товары через SQL или выполните sample_products.sql</p>
+						<button class="btn btn-primary" onclick="window.open('https://supabase.com', '_blank')">
+							Открыть Supabase
+						</button>
+					</div>
+				`
+			}
+		} catch (error) {
+			console.error('Failed to load products:', error)
+			grid.innerHTML = `
+				<div class="error-state">
+					<i class="fas fa-exclamation-triangle"></i>
+					<h3>Ошибка загрузки</h3>
+					<p>Не удалось загрузить товары: ${error.message}</p>
+				</div>
+			`
+		}
 	}
 
 	bindProductActions() {

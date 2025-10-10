@@ -48,15 +48,15 @@ SELECT
   1
 FROM products p
 CROSS JOIN (VALUES
-  ('SALMON-001', '/images/salmon.jpg', 'Семга свежая'),
-  ('DORADO-001', '/images/dorado.jpg', 'Дорадо целая'),
-  ('TUNA-001', '/images/tuna.jpg', 'Тунец стейк'),
-  ('CRAB-001', '/images/crab.jpg', 'Камчатский краб'),
-  ('SHRIMP-001', '/images/shrimp.jpg', 'Креветки тигровые'),
-  ('MUSSELS-001', '/images/mussels.jpg', 'Мидии черноморские'),
-  ('CAVIAR-001', '/images/caviar-black.jpg', 'Икра осетровая'),
-  ('CAVIAR-002', '/images/caviar-red.jpg', 'Икра красная горбуши'),
-  ('SALMON-002', '/images/smoked-salmon.jpg', 'Копченый лосось')
+  ('SALMON-001', '/images/products/crayfish-1.svg', 'Семга свежая'),
+  ('DORADO-001', '/images/products/crayfish-2.svg', 'Дорадо целая'),
+  ('TUNA-001', '/images/products/crayfish-3.svg', 'Тунец стейк'),
+  ('CRAB-001', '/images/products/crab-1.svg', 'Камчатский краб'),
+  ('SHRIMP-001', '/images/products/shrimp-1.svg', 'Креветки тигровые'),
+  ('MUSSELS-001', '/images/products/langostino-1.svg', 'Мидии черноморские'),
+  ('CAVIAR-001', '/images/products/crab-2.svg', 'Икра осетровая'),
+  ('CAVIAR-002', '/images/products/shrimp-2.svg', 'Икра красная горбуши'),
+  ('SALMON-002', '/images/products/langostino-2.svg', 'Копченый лосось')
 ) AS image_data(sku, image_url, alt_text)
 WHERE p.sku = image_data.sku;
 
