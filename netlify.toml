@@ -3,7 +3,7 @@
   publish = "."
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
   # Ignore secrets scanning in documentation files
   SECRETS_SCAN_OMIT_PATHS = ".env.example,.gitignore,QUICK_START.md,SETUP.md,docs/SETUP_NETLIFY.md,docs/SETUP_SUPABASE.md,README.md"
 
