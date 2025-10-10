@@ -957,44 +957,69 @@ function initContactForm() {
 function initAddToCart() {
 	// Use event delegation to handle dynamically added buttons
 	document.addEventListener('click', function (e) {
-		if (e.target.closest('.add-to-cart')) {
-			const button = e.target.closest('.add-to-cart')
-			if (button.disabled) return
+		// Check if clicked element is add-to-cart button or its child
+		const button = e.target.closest('.add-to-cart')
+		if (!button) return
 
-			const productCard = button.closest('.product-card')
-			const productName = productCard.querySelector('h3').textContent
-			const productPriceElement = productCard.querySelector('.price')
-			const productImage = productCard.querySelector('.product-image img')
+		// Prevent default behavior
+		e.preventDefault()
+		e.stopPropagation()
 
-			// Extract price number from text
-			const priceText = productPriceElement.textContent
-			const priceMatch = priceText.match(/(\d[\d\s]*)/)
-			const price = priceMatch ? parseInt(priceMatch[1].replace(/\s/g, '')) : 0
+		// Check if button is disabled
+		if (button.disabled || button.hasAttribute('disabled')) {
+			console.log('Button is disabled')
+			return
+		}
 
-			// Create product object
-			const product = {
-				id:
-					productCard.dataset.id ||
-					productName.toLowerCase().replace(/\s+/g, '-'),
-				name: productName,
-				price: price,
-				image: productImage
-					? productImage.src
-					: '/images/products/crayfish-1.svg',
-			}
+		console.log('Add to cart clicked!') // Debug log
 
-			// Add to cart
+		const productCard = button.closest('.product-card')
+		if (!productCard) {
+			console.error('Product card not found')
+			return
+		}
+
+		const productName = productCard.querySelector('h3').textContent
+		const productPriceElement = productCard.querySelector('.price')
+		const productImage = productCard.querySelector('.product-image img')
+
+		if (!productPriceElement) {
+			console.error('Price element not found')
+			return
+		}
+
+		// Extract price number from text
+		const priceText = productPriceElement.textContent
+		const priceMatch = priceText.match(/(\d[\d\s,]*)/)
+		const price = priceMatch ? parseInt(priceMatch[1].replace(/[\s,]/g, '')) : 0
+
+		// Create product object
+		const product = {
+			id:
+				productCard.dataset.id ||
+				productName.toLowerCase().replace(/\s+/g, '-'),
+			name: productName,
+			price: price,
+			image: productImage ? productImage.src : '/images/fish-placeholder.svg',
+		}
+
+		console.log('Adding product to cart:', product) // Debug log
+
+		// Add to cart
+		try {
 			cart.addItem(product)
 
 			// Animation effect
-			const originalText = button.textContent
-			button.textContent = 'Добавлено!'
+			const originalText = button.innerHTML
+			button.innerHTML = '<i class="fas fa-check"></i> Добавлено!'
 			button.style.background = '#27ae60'
 
 			setTimeout(() => {
-				button.textContent = originalText
+				button.innerHTML = originalText
 				button.style.background = ''
 			}, 2000)
+		} catch (error) {
+			console.error('Error adding to cart:', error)
 		}
 	})
 
@@ -1082,7 +1107,7 @@ function updateProductsOnPage(products) {
 			<div class="product-image">
 				<img src="${product.image}" alt="${
 				product.name
-			}" loading="lazy" onerror="this.src='/images/fish-placeholder.jpg'">
+			}" loading="lazy" onerror="this.src='/images/fish-placeholder.svg'">
 				${product.isFeatured ? '<span class="featured-badge">Хит продаж</span>' : ''}
 				${
 					!product.inStock

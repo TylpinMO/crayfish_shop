@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="150" viewBox="0 0 200 150">
+  <rect width="200" height="150" fill="#f8f9fa"/>
+  <g transform="translate(100,75)">
+    <!-- Simple fish icon -->
+    <path d="M-40,0 Q-40,-20 -20,-20 L20,-10 L30,0 L20,10 L-20,20 Q-40,20 -40,0 Z" fill="#e9ecef"/>
+    <circle cx="-25" cy="-5" r="3" fill="#6c757d"/>
+    <path d="M20,-10 L35,-5 L35,5 L20,10" fill="#e9ecef"/>
+  </g>
+  <text x="100" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">Загрузка...</text>
+</svg>
