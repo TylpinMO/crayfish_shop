@@ -257,6 +257,12 @@ class AdminUI {
 			document.getElementById('low-stock').textContent =
 				(products.lowStock || 0) + ' заканчивается'
 
+			// Update total products count in header
+			const totalProductsElement = document.getElementById('total-products-count')
+			if (totalProductsElement) {
+				totalProductsElement.textContent = products.total || '0'
+			}
+
 			// Update low stock count in header
 			const lowStockElement = document.getElementById('low-stock-count')
 			if (lowStockElement) {
@@ -298,15 +304,13 @@ class AdminUI {
 			const data = await response.json()
 			if (data.success) {
 				console.log('📊 Admin products data:', data.products.slice(0, 2))
-				// Count products with stock <= 5 as low stock
-				const lowStockCount = data.products.filter(
-					p => {
-						const stock = p.stockQuantity || p.stock_quantity || p.stock || 0
-						console.log(`Product ${p.name}: stock=${stock}`)
-						return stock <= 5
-					}
-				).length
-				console.log(`📊 Low stock count: ${lowStockCount}`)
+				// Count products with stock <= 5 as low stock  
+				const lowStockCount = data.products.filter(p => {
+					const stock = p.stockQuantity || 0
+					console.log(`Product ${p.name}: stock=${stock} (≤5: ${stock <= 5})`)
+					return stock <= 5
+				}).length
+				console.log(`📊 Low stock count: ${lowStockCount} (краб=5, икра=3 должны быть ≤5)`)
 				return {
 					total: data.products.length,
 					lowStock: lowStockCount,

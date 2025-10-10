@@ -77,9 +77,9 @@ exports.handler = async (event, context) => {
 		}
 	}
 
-	// Check cache first (DISABLED FOR TESTING)
+	// Check cache first
 	const now = Date.now()
-	if (false && productsCache && now - cacheTimestamp < CACHE_TTL) {
+	if (productsCache && now - cacheTimestamp < CACHE_TTL) {
 		console.log('Returning cached products data')
 		return {
 			statusCode: 200,
@@ -178,7 +178,7 @@ exports.handler = async (event, context) => {
 					console.log('Image processing:', {
 						productName: product.name,
 						rawImageUrl: primaryImage?.image_url,
-						normalizedUrl: imageUrl
+						normalizedUrl: imageUrl,
 					})
 
 					// Validate required fields

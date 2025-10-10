@@ -102,7 +102,19 @@ class FishShopApp {
 	 */
 	handleAddToCart(e) {
 		console.log('🛒 handleAddToCart called', e.target)
-		const button = e.target.closest('.add-to-cart')
+		
+		// Сначала проверяем, клик был на самой кнопке
+		let button = e.target.closest('.add-to-cart')
+		
+		// Если не на кнопке, ищем кнопку в карточке товара
+		if (!button) {
+			const productCard = e.target.closest('.product-card')
+			if (productCard) {
+				button = productCard.querySelector('.add-to-cart')
+				console.log('🔍 Found button in product card:', button)
+			}
+		}
+		
 		if (!button) {
 			console.log('❌ No add-to-cart button found')
 			return
