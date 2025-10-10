@@ -5,10 +5,21 @@ const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const { createClient } = require('@supabase/supabase-js')
 
+// Environment validation
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+	console.error('Missing Supabase environment variables!')
+}
+
 // Initialize Supabase with server-side keys from environment
 const supabase = createClient(
 	process.env.SUPABASE_URL,
-	process.env.SUPABASE_SERVICE_KEY // SERVICE KEY, not anon key!
+	process.env.SUPABASE_SERVICE_KEY, // SERVICE KEY, not anon key!
+	{
+		auth: {
+			autoRefreshToken: false,
+			persistSession: false,
+		},
+	}
 )
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key'
@@ -65,6 +76,13 @@ exports.handler = async (event, context) => {
 
 async function handleLogin(email, password, headers) {
 	try {
+		console.log('Login attempt for email:', email)
+		console.log('Supabase URL:', process.env.SUPABASE_URL ? 'Set' : 'Missing')
+		console.log(
+			'Service Key:',
+			process.env.SUPABASE_SERVICE_KEY ? 'Set' : 'Missing'
+		)
+
 		// Check admin user in database
 		const { data: adminUser, error } = await supabase
 			.from('admin_users')
@@ -72,6 +90,8 @@ async function handleLogin(email, password, headers) {
 			.eq('email', email)
 			.eq('is_active', true)
 			.single()
+
+		console.log('Database query result:', { adminUser, error })
 
 		if (error || !adminUser) {
 			return {
