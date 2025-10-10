@@ -73,13 +73,20 @@ exports.handler = async (event, context) => {
 				product.product_images?.[0]
 			const categoryName = product.categories?.name || 'Товары'
 
+			// Fix image paths - ensure they work on Netlify
+			let imageUrl = primaryImage?.image_url || 'images/fish-placeholder.svg'
+			// Remove leading slash if present (for Netlify compatibility)
+			if (imageUrl.startsWith('/')) {
+				imageUrl = imageUrl.substring(1)
+			}
+
 			return {
 				id: product.id,
 				name: product.name,
 				description: product.description,
 				price: product.price,
 				oldPrice: product.old_price,
-				image: primaryImage?.image_url || '/images/fish-placeholder.jpg',
+				image: imageUrl,
 				category: categoryName,
 				categorySlug: categoryName.toLowerCase().replace(/\s+/g, '-'),
 				inStock: product.stock_quantity > 0,

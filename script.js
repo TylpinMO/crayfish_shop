@@ -954,7 +954,14 @@ function initContactForm() {
 }
 
 // Enhanced add to cart functionality
+let cartInitialized = false
 function initAddToCart() {
+	// Prevent multiple initialization
+	if (cartInitialized) return
+	cartInitialized = true
+
+	console.log('Initializing cart functionality...') // Debug log
+
 	// Use event delegation to handle dynamically added buttons
 	document.addEventListener('click', function (e) {
 		// Check if clicked element is add-to-cart button or its child
@@ -1007,7 +1014,15 @@ function initAddToCart() {
 
 		// Add to cart
 		try {
+			// Check if cart exists
+			if (typeof cart === 'undefined') {
+				console.error('Cart object is not defined!')
+				return
+			}
+
+			console.log('Cart object exists, adding item...')
 			cart.addItem(product)
+			console.log('Item added successfully!')
 
 			// Animation effect
 			const originalText = button.innerHTML
@@ -1107,7 +1122,7 @@ function updateProductsOnPage(products) {
 			<div class="product-image">
 				<img src="${product.image}" alt="${
 				product.name
-			}" loading="lazy" onerror="this.src='/images/fish-placeholder.svg'">
+			}" loading="lazy" onerror="console.error('Image failed to load:', this.src); this.src='/images/fish-placeholder.svg'" onload="console.log('Image loaded:', this.src)">
 				${product.isFeatured ? '<span class="featured-badge">Хит продаж</span>' : ''}
 				${
 					!product.inStock
