@@ -58,8 +58,8 @@ class FishShopApp {
 		// Add to cart buttons (using delegation)
 		document.addEventListener('click', this.handleAddToCart)
 
-		// Cart events
-		this.cart.addEventListener(this.handleCartEvents)
+		// Cart UI events (cart drawer, buttons, etc.)
+		this.setupCartUIEvents()
 
 		// Global keyboard shortcuts
 		document.addEventListener('keydown', e => {
@@ -195,6 +195,44 @@ class FishShopApp {
 
 		// Could also show a toast notification
 		console.error('Add to cart error:', errorMessage)
+	}
+
+	/**
+	 * Setup cart UI event listeners
+	 */
+	setupCartUIEvents() {
+		// Cart toggle buttons
+		const cartButtons = document.querySelectorAll('[data-action="toggle-cart"]')
+		cartButtons.forEach(button => {
+			button.addEventListener('click', () => {
+				const cartDrawer = document.getElementById('cart-drawer')
+				if (cartDrawer) {
+					cartDrawer.classList.toggle('open')
+				}
+			})
+		})
+
+		// Cart close buttons  
+		const closeButtons = document.querySelectorAll('[data-action="close-cart"]')
+		closeButtons.forEach(button => {
+			button.addEventListener('click', () => {
+				const cartDrawer = document.getElementById('cart-drawer')
+				if (cartDrawer) {
+					cartDrawer.classList.remove('open')
+				}
+			})
+		})
+
+		// Cart overlay click
+		const cartOverlay = document.getElementById('cart-overlay')
+		if (cartOverlay) {
+			cartOverlay.addEventListener('click', () => {
+				const cartDrawer = document.getElementById('cart-drawer')
+				if (cartDrawer) {
+					cartDrawer.classList.remove('open')
+				}
+			})
+		}
 	}
 
 	/**

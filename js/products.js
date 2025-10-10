@@ -50,6 +50,7 @@ class ProductsManager {
 			}
 
 			const data = await response.json()
+			console.log('API Response:', data)
 
 			if (!data.success) {
 				throw new Error(data.message || 'API returned error')
@@ -67,6 +68,7 @@ class ProductsManager {
 			this.error = null
 
 			console.log(`Loaded ${this.products.length} products successfully`)
+			console.log('Products sample:', this.products.slice(0, 2))
 			this.updateUI(this.products)
 
 			return data

@@ -257,6 +257,12 @@ class AdminUI {
 			document.getElementById('low-stock').textContent =
 				(products.lowStock || 0) + ' заканчивается'
 
+			// Update low stock count in header
+			const lowStockElement = document.getElementById('low-stock-count')
+			if (lowStockElement) {
+				lowStockElement.textContent = products.lowStock || '0'
+			}
+
 			// Update navigation badge
 			const productsBadge = document.getElementById('products-count')
 			if (productsBadge) {
@@ -291,7 +297,10 @@ class AdminUI {
 			const response = await fetch('/.netlify/functions/products')
 			const data = await response.json()
 			if (data.success) {
-				const lowStockCount = data.products.filter(p => !p.inStock).length
+				// Count products with stock <= 5 as low stock
+				const lowStockCount = data.products.filter(p => 
+					p.stockQuantity !== undefined && p.stockQuantity <= 5
+				).length
 				return {
 					total: data.products.length,
 					lowStock: lowStockCount,

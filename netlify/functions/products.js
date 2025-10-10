@@ -40,6 +40,11 @@ function normalizeImageUrl(imageUrl) {
 		return imageUrl.substring(1)
 	}
 
+	// Ensure the path exists and is not empty
+	if (!imageUrl.trim()) {
+		return 'images/fish-placeholder.svg'
+	}
+
 	return imageUrl
 }
 
@@ -72,9 +77,9 @@ exports.handler = async (event, context) => {
 		}
 	}
 
-	// Check cache first
+	// Check cache first (DISABLED FOR TESTING)
 	const now = Date.now()
-	if (productsCache && now - cacheTimestamp < CACHE_TTL) {
+	if (false && productsCache && now - cacheTimestamp < CACHE_TTL) {
 		console.log('Returning cached products data')
 		return {
 			statusCode: 200,
@@ -152,6 +157,7 @@ exports.handler = async (event, context) => {
 		}
 
 		console.log(`Processing ${products.length} products...`)
+		console.log('Raw products sample:', JSON.stringify(products.slice(0, 2), null, 2))
 
 		// Transform data for frontend with validation
 		const transformedProducts = products
