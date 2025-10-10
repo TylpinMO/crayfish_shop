@@ -492,5 +492,14 @@
 		<script src="js/cart.js"></script>
 		<script src="js/products.js"></script>
 		<script src="js/app.js"></script>
+		
+		<!-- Initialize Application -->
+		<script>
+			// Initialize Fish Shop App when DOM is ready
+			document.addEventListener('DOMContentLoaded', () => {
+				window.fishShopApp = new FishShopApp()
+				window.fishShopApp.init()
+			})
+		</script>
 	</body>
 </html>
