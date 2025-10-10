@@ -39,14 +39,14 @@ class AdminAuth {
 			// Use serverless function instead of direct Supabase
 			const result = await window.adminAPI.request('/admin-auth', {
 				method: 'POST',
-				body: { action: 'login', email, password }
+				body: { action: 'login', email, password },
 			})
 
 			if (result.success) {
 				// Store token and user data
 				window.adminAPI.setToken(result.token)
 				this.currentUser = result.user
-				
+
 				this.showNotification('Успешный вход в систему', 'success')
 				this.showAdminPanel()
 				return { success: true, user: result.user }
@@ -65,7 +65,7 @@ class AdminAuth {
 			// Clear local token and user data
 			window.adminAPI.removeToken()
 			this.currentUser = null
-			
+
 			this.showNotification('Выход выполнен', 'success')
 			this.showLoginForm()
 		} catch (error) {
