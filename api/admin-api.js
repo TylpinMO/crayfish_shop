@@ -186,34 +186,101 @@ async function getCategories(req, res) {
 }
 
 async function getDashboard(req, res) {
-	// Get counts
-	const [productsResult, categoriesResult] = await Promise.all([
-		supabase.from('products').select('id, stock_quantity, is_featured'),
-		supabase.from('categories').select('id'),
-	])
+	try {
+		// Get comprehensive data
+		const [productsResult, categoriesResult, imagesResult] = await Promise.all([
+			supabase
+				.from('products')
+				.select(
+					'id, name, price, stock_quantity, is_featured, is_active, created_at'
+				),
+			supabase.from('categories').select('id, name'),
+			supabase.from('product_images').select('id, product_id'),
+		])
 
-	if (productsResult.error || categoriesResult.error) {
-		return res.status(500).json({
-			error: 'Failed to fetch dashboard data',
+		if (productsResult.error || categoriesResult.error || imagesResult.error) {
+			return res.status(500).json({
+				error: 'Failed to fetch dashboard data',
+			})
+		}
+
+		const products = productsResult.data
+		const categories = categoriesResult.data
+		const images = imagesResult.data
+
+		// Calculate statistics
+		const totalProducts = products.length
+		const activeProducts = products.filter(p => p.is_active).length
+		const inactiveProducts = totalProducts - activeProducts
+		const featuredProducts = products.filter(p => p.is_featured).length
+		const lowStockProducts = products.filter(p => p.stock_quantity <= 5).length
+		const outOfStockProducts = products.filter(
+			p => p.stock_quantity === 0
+		).length
+		const totalCategories = categories.length
+		const totalImages = images.length
+
+		// Calculate total inventory value
+		const totalValue = products.reduce(
+			(sum, p) => sum + p.price * p.stock_quantity,
+			0
+		)
+
+		// Recent products (last 7 days)
+		const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+		const recentProducts = products.filter(p => p.created_at > weekAgo).length
+
+		// Top categories by product count
+		const categoryStats = categories
+			.map(cat => ({
+				name: cat.name,
+				count: products.filter(p => p.category_id === cat.id).length,
+			}))
+			.sort((a, b) => b.count - a.count)
+
+		// Products without images
+		const productsWithImages = [...new Set(images.map(img => img.product_id))]
+			.length
+		const productsWithoutImages = totalProducts - productsWithImages
+
+		return res.status(200).json({
+			success: true,
+			data: {
+				overview: {
+					totalProducts,
+					activeProducts,
+					inactiveProducts,
+					featuredProducts,
+					totalCategories,
+					totalImages,
+					recentProducts,
+				},
+				inventory: {
+					lowStockProducts,
+					outOfStockProducts,
+					totalValue: Math.round(totalValue * 100) / 100,
+					avgProductValue:
+						totalProducts > 0
+							? Math.round((totalValue / totalProducts) * 100) / 100
+							: 0,
+				},
+				content: {
+					productsWithImages,
+					productsWithoutImages,
+					categoryStats: categoryStats.slice(0, 5),
+				},
+				alerts: {
+					lowStock: lowStockProducts > 0,
+					outOfStock: outOfStockProducts > 0,
+					missingImages: productsWithoutImages > 0,
+					inactiveProducts: inactiveProducts > 0,
+				},
+			},
 		})
+	} catch (error) {
+		console.error('Dashboard error:', error)
+		return res.status(500).json({ error: 'Failed to generate dashboard' })
 	}
-
-	const totalProducts = productsResult.data.length
-	const lowStockProducts = productsResult.data.filter(
-		p => p.stock_quantity <= 5
-	).length
-	const featuredProducts = productsResult.data.filter(p => p.is_featured).length
-	const totalCategories = categoriesResult.data.length
-
-	return res.status(200).json({
-		success: true,
-		data: {
-			totalProducts,
-			lowStockProducts,
-			featuredProducts,
-			totalCategories,
-		},
-	})
 }
 
 async function createProduct(req, res, admin) {

@@ -153,10 +153,24 @@ export default async function handler(req, res) {
 						product.product_images?.[0]
 					const categoryName = product.categories?.name || 'Товары'
 
-					// Get image URL - priority: public_url > storage_path > image_url
-					let imageUrl = primaryImage?.public_url || 
-								  getStorageImageUrl(primaryImage?.storage_path, primaryImage?.public_url) ||
-								  normalizeImageUrl(primaryImage?.image_url)
+					// Get image URL - priority: public_url > storage_path > image_url (fallback for old data)
+					let imageUrl = 'images/fish-placeholder.svg' // default fallback
+
+					if (primaryImage) {
+						if (
+							primaryImage.public_url &&
+							primaryImage.public_url.startsWith('http')
+						) {
+							imageUrl = primaryImage.public_url
+						} else if (primaryImage.storage_path) {
+							imageUrl = getStorageImageUrl(
+								primaryImage.storage_path,
+								primaryImage.public_url
+							)
+						} else if (primaryImage.image_url) {
+							imageUrl = normalizeImageUrl(primaryImage.image_url)
+						}
+					}
 
 					if (!product.name || typeof product.price !== 'number') {
 						console.warn(`Invalid product data:`, {

@@ -201,9 +201,13 @@ class ProductsManager {
 						${priceDisplay}
 						<span class="unit">за ${product.unit}</span>
 					</div>
-					<button class="add-to-cart btn btn-primary" ${
-						!product.inStock ? 'disabled' : ''
-					}>
+					<button class="add-to-cart btn btn-primary" 
+						data-id="${product.id}"
+						data-name="${product.name}"
+						data-price="${product.price}"
+						data-image="${product.image}"
+						data-unit="${product.unit}"
+						${!product.inStock ? 'disabled' : ''}>
 						<i class="fas fa-shopping-cart"></i>
 						${product.inStock ? 'В корзину' : 'Нет в наличии'}
 					</button>

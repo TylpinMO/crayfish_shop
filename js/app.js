@@ -55,8 +55,13 @@ class FishShopApp {
 	 * Set up global event listeners
 	 */
 	setupEventListeners() {
-		// Add to cart buttons (using delegation)
-		document.addEventListener('click', this.handleAddToCart)
+		// Add to cart buttons (using delegation) - only for add-to-cart buttons
+		document.addEventListener('click', e => {
+			// Only handle clicks on add-to-cart buttons or their children
+			if (e.target.closest('.add-to-cart')) {
+				this.handleAddToCart(e)
+			}
+		})
 
 		// Cart UI events (cart drawer, buttons, etc.)
 		this.setupCartUIEvents()
@@ -101,25 +106,14 @@ class FishShopApp {
 	 * Handle add to cart button clicks
 	 */
 	handleAddToCart(e) {
-		console.log('🛒 handleAddToCart called', e.target)
-
-		// Сначала проверяем, клик был на самой кнопке
-		let button = e.target.closest('.add-to-cart')
-
-		// Если не на кнопке, ищем кнопку в карточке товара
-		if (!button) {
-			const productCard = e.target.closest('.product-card')
-			if (productCard) {
-				button = productCard.querySelector('.add-to-cart')
-				console.log('🔍 Found button in product card:', button)
-			}
-		}
+		const button = e.target.closest('.add-to-cart')
 
 		if (!button) {
 			console.log('❌ No add-to-cart button found')
 			return
 		}
-		console.log('✅ Found add-to-cart button', button)
+
+		console.log('🛒 Adding product to cart', button)
 
 		e.preventDefault()
 		e.stopPropagation()
@@ -131,20 +125,25 @@ class FishShopApp {
 		}
 
 		try {
-			const productCard = button.closest('.product-card')
-			if (!productCard) {
-				throw new Error('Product card not found')
+			// Get product data from button attributes
+			const productId = button.dataset.id
+			const productName = button.dataset.name
+			const productPrice = parseFloat(button.dataset.price)
+			const productImage = button.dataset.image
+			const productUnit = button.dataset.unit
+
+			if (!productId || !productName || !productPrice) {
+				throw new Error('Missing product data on button')
 			}
 
-			const productId = productCard.dataset.id
-			if (!productId) {
-				throw new Error('Product ID not found')
-			}
-
-			// Get product data
-			const product = this.productsManager.getProductById(productId)
-			if (!product) {
-				throw new Error('Product not found in manager')
+			// Create product object
+			const product = {
+				id: productId,
+				name: productName,
+				price: productPrice,
+				image: productImage,
+				unit: productUnit,
+				inStock: true,
 			}
 
 			this.log('Adding product to cart:', product.name)

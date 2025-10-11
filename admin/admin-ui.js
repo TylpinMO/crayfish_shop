@@ -144,7 +144,7 @@ class AdminUI {
 		return `
             <div class="page-header">
                 <div class="page-actions">
-                    <button class="btn btn-primary" id="add-product-btn">
+                    <button class="btn btn-primary" id="create-product-btn">
                         <i class="fas fa-plus"></i> Добавить товар
                     </button>
                 </div>
@@ -245,59 +245,151 @@ class AdminUI {
 
 	async loadDashboardData() {
 		try {
-			// Load real data from API
-			const products = await this.loadProductsCount()
-			const orders = await this.loadOrdersCount()
+			// Load comprehensive dashboard data from new API
+			const response = await fetch('/api/admin-api?action=dashboard', {
+				headers: {
+					Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+					'Content-Type': 'application/json',
+				},
+			})
 
-			document.getElementById('total-orders').textContent = orders.total || '0'
-			document.getElementById('new-orders').textContent =
-				(orders.new || 0) + ' новых'
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}`)
+			}
+
+			const result = await response.json()
+
+			if (!result.success) {
+				throw new Error(result.error || 'Failed to load dashboard')
+			}
+
+			const data = result.data
+
+			// Update overview stats
 			document.getElementById('total-products').textContent =
-				products.total || '0'
-			document.getElementById('low-stock').textContent =
-				(products.lowStock || 0) + ' заканчивается'
+				data.overview.totalProducts || '0'
+			document.getElementById('low-stock').textContent = `${
+				data.inventory.lowStockProducts || 0
+			} заканчивается`
+			document.getElementById('total-revenue').textContent = `${
+				data.inventory.totalValue || 0
+			}₽`
+			document.getElementById('new-orders').textContent = `${
+				data.overview.recentProducts || 0
+			} новых за неделю`
 
-			// Update total products count in header
+			// Update header counters
 			const totalProductsElement = document.getElementById(
 				'total-products-count'
 			)
 			if (totalProductsElement) {
-				totalProductsElement.textContent = products.total || '0'
+				totalProductsElement.textContent = data.overview.totalProducts || '0'
 			}
 
-			// Update low stock count in header
 			const lowStockElement = document.getElementById('low-stock-count')
 			if (lowStockElement) {
-				lowStockElement.textContent = products.lowStock || '0'
+				lowStockElement.textContent = data.inventory.lowStockProducts || '0'
 			}
 
 			// Update navigation badge
 			const productsBadge = document.getElementById('products-count')
 			if (productsBadge) {
-				productsBadge.textContent = products.total || '0'
+				productsBadge.textContent = data.overview.totalProducts || '0'
 			}
 
-			// Calculate revenue (placeholder for now)
-			document.getElementById('total-revenue').textContent = '0₽'
-			document.getElementById('revenue-change').textContent = '+0%'
-
-			document.getElementById('recent-orders').innerHTML = `
-                <div class="admin-message success">
-                    <i class="fas fa-check-circle"></i>
-                    <p>Админ панель подключена к базе данных</p>
-                    <small>Товаров: ${products.total} | Заказов: ${orders.total}</small>
-                </div>
-            `
+			// Show detailed dashboard info
+			document.getElementById('recent-orders').innerHTML =
+				this.generateDashboardSummary(data)
 		} catch (error) {
 			console.error('Dashboard loading error:', error)
 			// Show fallback data
-			document.getElementById('total-orders').textContent = '0'
-			document.getElementById('new-orders').textContent = '0 новых'
 			document.getElementById('total-products').textContent = '0'
 			document.getElementById('low-stock').textContent = '0 заканчивается'
 			document.getElementById('total-revenue').textContent = '0₽'
-			document.getElementById('revenue-change').textContent = '+0%'
+			document.getElementById('new-orders').textContent = '0 новых'
+
+			document.getElementById('recent-orders').innerHTML = `
+				<div class="admin-message error">
+					<i class="fas fa-exclamation-triangle"></i>
+					<p>Ошибка загрузки дашборда</p>
+					<small>${error.message}</small>
+				</div>
+			`
 		}
+	}
+
+	generateDashboardSummary(data) {
+		const alerts = []
+
+		if (data.alerts.lowStock) {
+			alerts.push(
+				`<span class="alert warning"><i class="fas fa-exclamation-triangle"></i> ${data.inventory.lowStockProducts} товаров заканчивается</span>`
+			)
+		}
+
+		if (data.alerts.outOfStock) {
+			alerts.push(
+				`<span class="alert error"><i class="fas fa-times-circle"></i> ${data.inventory.outOfStockProducts} товаров нет в наличии</span>`
+			)
+		}
+
+		if (data.alerts.missingImages) {
+			alerts.push(
+				`<span class="alert warning"><i class="fas fa-image"></i> У ${data.content.productsWithoutImages} товаров нет изображений</span>`
+			)
+		}
+
+		const topCategories = data.content.categoryStats
+			.slice(0, 3)
+			.map(cat => `<li>${cat.name}: ${cat.count} товаров</li>`)
+			.join('')
+
+		return `
+			<div class="dashboard-summary">
+				<div class="summary-section">
+					<h4><i class="fas fa-chart-bar"></i> Обзор</h4>
+					<ul>
+						<li>Активных товаров: ${data.overview.activeProducts}</li>
+						<li>Неактивных товаров: ${data.overview.inactiveProducts}</li>
+						<li>Рекомендуемых товаров: ${data.overview.featuredProducts}</li>
+						<li>Категорий: ${data.overview.totalCategories}</li>
+						<li>Изображений: ${data.overview.totalImages}</li>
+					</ul>
+				</div>
+				
+				<div class="summary-section">
+					<h4><i class="fas fa-warehouse"></i> Склад</h4>
+					<ul>
+						<li>Общая стоимость: ${data.inventory.totalValue}₽</li>
+						<li>Средняя цена: ${data.inventory.avgProductValue}₽</li>
+						<li>Заканчивается: ${data.inventory.lowStockProducts}</li>
+						<li>Нет в наличии: ${data.inventory.outOfStockProducts}</li>
+					</ul>
+				</div>
+				
+				${
+					topCategories
+						? `
+				<div class="summary-section">
+					<h4><i class="fas fa-tags"></i> Топ категории</h4>
+					<ul>${topCategories}</ul>
+				</div>
+				`
+						: ''
+				}
+				
+				${
+					alerts.length > 0
+						? `
+				<div class="summary-section alerts">
+					<h4><i class="fas fa-bell"></i> Уведомления</h4>
+					${alerts.join('')}
+				</div>
+				`
+						: ''
+				}
+			</div>
+		`
 	}
 
 	async loadProductsCount() {
