@@ -245,15 +245,28 @@ class AdminUI {
 
 	async loadDashboardData() {
 		try {
+			// Check if user is authenticated
+			const token = localStorage.getItem('adminToken')
+			if (!token) {
+				console.log('No admin token found, skipping dashboard load')
+				return
+			}
+
 			// Load comprehensive dashboard data from new API
 			const response = await fetch('/api/admin-api?action=dashboard', {
 				headers: {
-					Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+					Authorization: `Bearer ${token}`,
 					'Content-Type': 'application/json',
 				},
 			})
 
 			if (!response.ok) {
+				if (response.status === 401) {
+					console.log('Admin token expired, redirecting to login')
+					localStorage.removeItem('adminToken')
+					window.location.reload()
+					return
+				}
 				throw new Error(`HTTP ${response.status}`)
 			}
 
@@ -394,30 +407,33 @@ class AdminUI {
 
 	async loadProductsCount() {
 		try {
-			const response = await fetch('/api/products')
+			const token = localStorage.getItem('adminToken')
+			if (!token) return { total: 0, lowStock: 0 }
+
+			const response = await fetch('/api/admin-api?action=products', {
+				headers: {
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json',
+				},
+			})
+
+			if (!response.ok) return { total: 0, lowStock: 0 }
+
 			const data = await response.json()
-			if (data.success) {
-				console.log('📊 Admin products data:', data.products.slice(0, 2))
-				// Count products with stock <= 5 as low stock
-				const lowStockCount = data.products.filter(p => {
-					const stock = p.stockQuantity || 0
-					console.log(`Product ${p.name}: stock=${stock} (≤5: ${stock <= 5})`)
-					return stock <= 5
-				}).length
-				console.log(
-					`📊 Low stock count: ${lowStockCount} (краб=5, икра=3 должны быть ≤5)`
-				)
+			if (data.success && data.products) {
+				const lowStockCount = data.products.filter(
+					p => p.stock_quantity <= 5
+				).length
 				return {
 					total: data.products.length,
 					lowStock: lowStockCount,
 				}
 			}
 		} catch (error) {
-			console.error('Failed to load products count:', error)
+			console.error('Products count error:', error)
 		}
 		return { total: 0, lowStock: 0 }
 	}
-
 	async loadOrdersCount() {
 		// Placeholder - orders API not implemented yet
 		return { total: 0, new: 0 }
@@ -428,28 +444,67 @@ class AdminUI {
 		grid.innerHTML = '<div class="loading">Загрузка товаров...</div>'
 
 		try {
-			const response = await fetch('/api/products')
+			const token = localStorage.getItem('adminToken')
+			if (!token) {
+				grid.innerHTML = '<div class="error">Требуется авторизация</div>'
+				return
+			}
+
+			const response = await fetch('/api/admin-api?action=products', {
+				headers: {
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json',
+				},
+			})
+
+			if (!response.ok) {
+				if (response.status === 401) {
+					grid.innerHTML =
+						'<div class="error">Сессия истекла. Перезагрузите страницу</div>'
+					return
+				}
+				throw new Error(`HTTP ${response.status}`)
+			}
+
 			const data = await response.json()
 
-			if (data.success && data.products.length > 0) {
+			if (data.success && data.products && data.products.length > 0) {
 				grid.innerHTML = data.products
-					.map(
-						product => `
+					.map(product => {
+						const primaryImage =
+							product.product_images?.find(img => img.is_primary) ||
+							product.product_images?.[0]
+						const imageUrl =
+							primaryImage?.public_url ||
+							primaryImage?.image_url ||
+							'/images/products/crayfish-1.svg'
+						const categoryName = product.categories?.name || 'Без категории'
+						const isInStock = product.stock_quantity > 0
+
+						return `
 					<div class="product-card-admin">
 						<div class="product-image">
-							<img src="${product.image}" alt="${
+							<img src="${imageUrl}" alt="${
 							product.name
 						}" onerror="this.src='/images/products/crayfish-1.svg'">
 						</div>
 						<div class="product-info">
 							<h4>${product.name}</h4>
-							<p class="product-category">${product.category}</p>
-							<div class="product-price">${product.price.toLocaleString()} ₽</div>
+							<p class="product-category">${categoryName}</p>
+							<div class="product-price">${Number(product.price).toLocaleString()} ₽</div>
 							<div class="product-stock">Остаток: ${
-								product.inStock
-									? `${product.weight || 0} ${product.unit}`
+								isInStock
+									? `${product.stock_quantity} шт (${product.weight || 0} ${
+											product.unit || 'кг'
+									  })`
 									: 'Нет в наличии'
 							}</div>
+							<div class="product-status">
+								<span class="status ${product.is_active ? 'active' : 'inactive'}">
+									${product.is_active ? 'Активен' : 'Неактивен'}
+								</span>
+								${product.is_featured ? '<span class="featured">★ Рекомендуемый</span>' : ''}
+							</div>
 							<div class="product-actions">
 								<button class="btn btn-sm btn-primary edit-product" data-id="${product.id}">
 									<i class="fas fa-edit"></i> Редактировать
@@ -461,7 +516,7 @@ class AdminUI {
 						</div>
 					</div>
 				`
-					)
+					})
 					.join('')
 			} else {
 				grid.innerHTML = `
@@ -551,6 +606,197 @@ class AdminUI {
 		if (window.adminAuth) {
 			window.adminAuth.showNotification(message, type)
 		}
+	}
+
+	// Categories Management
+	async loadCategories() {
+		const container = document.getElementById('categories-list')
+		container.innerHTML = '<div class="loading">Загрузка категорий...</div>'
+
+		try {
+			const token = localStorage.getItem('adminToken')
+			if (!token) {
+				container.innerHTML = '<div class="error">Требуется авторизация</div>'
+				return
+			}
+
+			const response = await fetch('/api/admin-api?action=categories', {
+				headers: {
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json',
+				},
+			})
+
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}`)
+			}
+
+			const data = await response.json()
+
+			if (data.success && data.categories && data.categories.length > 0) {
+				container.innerHTML = data.categories
+					.map(
+						category => `
+						<div class="category-card">
+							<div class="category-info">
+								<h4>${category.name}</h4>
+								<p class="category-description">${category.description || 'Без описания'}</p>
+								<div class="category-stats">
+									<span class="products-count">Товаров: ${category.product_count || 0}</span>
+									<span class="status ${category.is_active ? 'active' : 'inactive'}">
+										${category.is_active ? 'Активна' : 'Неактивна'}
+									</span>
+								</div>
+							</div>
+							<div class="category-actions">
+								<button class="btn btn-sm btn-primary edit-category" data-id="${category.id}">
+									<i class="fas fa-edit"></i> Редактировать
+								</button>
+								<button class="btn btn-sm btn-danger delete-category" data-id="${category.id}">
+									<i class="fas fa-trash"></i> Удалить
+								</button>
+							</div>
+						</div>
+					`
+					)
+					.join('')
+			} else {
+				container.innerHTML = `
+					<div class="empty-state">
+						<i class="fas fa-tags"></i>
+						<h3>Категории не найдены</h3>
+						<p>Создайте первую категорию товаров</p>
+						<button class="btn btn-primary" onclick="document.getElementById('add-category-btn').click()">
+							Добавить категорию
+						</button>
+					</div>
+				`
+			}
+		} catch (error) {
+			console.error('Categories loading error:', error)
+			container.innerHTML = `
+				<div class="error-state">
+					<i class="fas fa-exclamation-triangle"></i>
+					<h3>Ошибка загрузки категорий</h3>
+					<p>${error.message}</p>
+					<button class="btn btn-secondary" onclick="window.adminUI.loadCategories()">
+						Попробовать снова
+					</button>
+				</div>
+			`
+		}
+	}
+
+	bindCategoryActions() {
+		// Implement category CRUD actions
+		console.log('Category actions bound')
+	}
+
+	loadOrders() {
+		const container = document.getElementById('orders-table')
+		container.innerHTML = `
+			<div class="info-state">
+				<i class="fas fa-shopping-cart"></i>
+				<h3>Система заказов</h3>
+				<p>Функциональность заказов будет добавлена в следующих обновлениях</p>
+				<p>Сейчас сайт работает как каталог товаров</p>
+			</div>
+		`
+	}
+
+	bindOrderFilters() {
+		console.log('Order filters bound')
+	}
+
+	loadSettings() {
+		const container = document.getElementById('page-content')
+		container.innerHTML = `
+			<div class="settings-container">
+				<div class="settings-section">
+					<h3><i class="fas fa-store"></i> Магазин</h3>
+					<div class="form-group">
+						<label>Название магазина</label>
+						<input type="text" value="РакоМаркет" class="form-control">
+					</div>
+					<div class="form-group">
+						<label>Описание</label>
+						<textarea class="form-control" rows="3">Свежие морепродукты с доставкой по городу</textarea>
+					</div>
+					<div class="form-group">
+						<label>Телефон</label>
+						<input type="tel" value="+7 (999) 123-45-67" class="form-control">
+					</div>
+					<div class="form-group">
+						<label>Email</label>
+						<input type="email" value="info@rakomarket.ru" class="form-control">
+					</div>
+				</div>
+
+				<div class="settings-section">
+					<h3><i class="fas fa-truck"></i> Доставка</h3>
+					<div class="form-group">
+						<label>Минимальная сумма заказа</label>
+						<input type="number" value="1000" class="form-control">
+						<small>₽</small>
+					</div>
+					<div class="form-group">
+						<label>Стоимость доставки</label>
+						<input type="number" value="300" class="form-control">
+						<small>₽</small>
+					</div>
+					<div class="form-group">
+						<label>Бесплатная доставка от</label>
+						<input type="number" value="3000" class="form-control">
+						<small>₽</small>
+					</div>
+				</div>
+
+				<div class="settings-section">
+					<h3><i class="fas fa-palette"></i> Внешний вид</h3>
+					<div class="form-group">
+						<label>Основной цвет</label>
+						<input type="color" value="#ff6b3d" class="form-control">
+					</div>
+					<div class="form-group">
+						<label>Цвет кнопок</label>
+						<input type="color" value="#1a365d" class="form-control">
+					</div>
+					<div class="form-group checkbox-group">
+						<label>
+							<input type="checkbox" checked>
+							<span class="checkmark"></span>
+							Показывать рекомендуемые товары
+						</label>
+					</div>
+				</div>
+
+				<div class="settings-section">
+					<h3><i class="fas fa-database"></i> База данных</h3>
+					<div class="form-group">
+						<label>Статус подключения</label>
+						<div class="status-indicator">
+							<span class="status active">✓ Подключено</span>
+							<small>Supabase PostgreSQL</small>
+						</div>
+					</div>
+					<div class="form-group">
+						<label>Последняя синхронизация</label>
+						<input type="text" value="${new Date().toLocaleString(
+							'ru-RU'
+						)}" class="form-control" readonly>
+					</div>
+				</div>
+
+				<div class="settings-actions">
+					<button class="btn btn-primary">
+						<i class="fas fa-save"></i> Сохранить настройки
+					</button>
+					<button class="btn btn-secondary">
+						<i class="fas fa-undo"></i> Сбросить
+					</button>
+				</div>
+			</div>
+		`
 	}
 }
 

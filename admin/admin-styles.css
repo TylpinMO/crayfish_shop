@@ -862,6 +862,129 @@
 }
 
 /* ===== RESPONSIVE ===== */
+/* ===== PRODUCT CARDS ===== */
+.product-status {
+	margin: 8px 0;
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.status {
+	padding: 3px 8px;
+	border-radius: 12px;
+	font-size: 12px;
+	font-weight: 500;
+}
+
+.status.active {
+	background: #d4edda;
+	color: #155724;
+}
+
+.status.inactive {
+	background: #f8d7da;
+	color: #721c24;
+}
+
+.featured {
+	background: #fff3cd;
+	color: #856404;
+	padding: 3px 8px;
+	border-radius: 12px;
+	font-size: 12px;
+	font-weight: 500;
+}
+
+/* ===== CATEGORIES ===== */
+.category-card {
+	background: var(--admin-card);
+	border: 1px solid var(--admin-border);
+	border-radius: 8px;
+	padding: 20px;
+	margin-bottom: 16px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.category-info h4 {
+	margin: 0 0 8px 0;
+	color: var(--admin-primary);
+}
+
+.category-description {
+	color: var(--admin-text-light);
+	margin: 0 0 12px 0;
+	font-size: 14px;
+}
+
+.category-stats {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+}
+
+.products-count {
+	font-size: 14px;
+	color: var(--admin-text);
+}
+
+/* ===== SETTINGS ===== */
+.settings-container {
+	max-width: 800px;
+	margin: 0 auto;
+}
+
+.settings-section {
+	background: var(--admin-card);
+	border: 1px solid var(--admin-border);
+	border-radius: 8px;
+	padding: 24px;
+	margin-bottom: 24px;
+}
+
+.settings-section h3 {
+	margin: 0 0 20px 0;
+	color: var(--admin-primary);
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.status-indicator {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.status-indicator small {
+	color: var(--admin-text-light);
+	font-size: 12px;
+}
+
+.settings-actions {
+	display: flex;
+	gap: 12px;
+	justify-content: center;
+	margin-top: 32px;
+}
+
+.info-state {
+	background: var(--admin-card);
+	border: 1px solid var(--admin-border);
+	border-radius: 12px;
+	padding: 40px;
+	text-align: center;
+	color: var(--admin-text-light);
+}
+
+.info-state i {
+	font-size: 48px;
+	color: var(--admin-accent);
+	margin-bottom: 16px;
+}
+
 @media (max-width: 768px) {
 	.form-row {
 		grid-template-columns: 1fr;

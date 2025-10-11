@@ -31,6 +31,9 @@ class FishShopApp {
 			this.cart = new ShoppingCart()
 			this.productsManager = new ProductsManager()
 
+			// Make cart globally accessible for HTML onclick handlers
+			window.cart = this.cart
+
 			// Set up event listeners
 			this.setupEventListeners()
 
@@ -100,6 +103,15 @@ class FishShopApp {
 				}
 			}
 		})
+
+		// Order form submission
+		const orderForm = document.getElementById('order-form')
+		if (orderForm) {
+			orderForm.addEventListener('submit', e => {
+				e.preventDefault()
+				this.handleOrderSubmission(e)
+			})
+		}
 	}
 
 	/**
@@ -243,7 +255,7 @@ class FishShopApp {
 
 		// Update cart content when opening
 		if (!isOpen && !forceClose) {
-			this.cart?.updateCartUI()
+			this.cart?.updateUI()
 		}
 	}
 
@@ -336,6 +348,15 @@ class FishShopApp {
 			observer.observe(cartSidebar, {
 				attributes: true,
 				attributeFilter: ['class'],
+			})
+		}
+
+		// Checkout button
+		const checkoutBtn = document.getElementById('show-checkout-form')
+		if (checkoutBtn) {
+			checkoutBtn.addEventListener('click', e => {
+				e.preventDefault()
+				this.showCheckoutForm()
 			})
 		}
 	}
@@ -474,6 +495,84 @@ class FishShopApp {
 		this.debug = !this.debug
 		localStorage.setItem('fishShop_debug', this.debug)
 		console.log(`Debug mode ${this.debug ? 'enabled' : 'disabled'}`)
+	}
+
+	/**
+	 * Show checkout form
+	 */
+	showCheckoutForm() {
+		// Проверяем, что корзина не пуста
+		if (this.cart.getTotalItems() === 0) {
+			alert('Ваша корзина пуста')
+			return
+		}
+
+		// Показываем форму оформления заказа
+		const checkoutForm = document.getElementById('checkout-form')
+		const cartSummary = document.getElementById('cart-summary')
+
+		if (checkoutForm && cartSummary) {
+			cartSummary.style.display = 'none'
+			checkoutForm.classList.remove('hidden')
+
+			// Обновляем итоговую сумму в форме
+			this.cart.updateUI()
+		}
+	}
+
+	/**
+	 * Handle order form submission
+	 */
+	async handleOrderSubmission(e) {
+		const form = e.target
+		const formData = new FormData(form)
+
+		// Получаем данные формы
+		const orderData = {
+			name: formData.get('name'),
+			phone: formData.get('phone'),
+			address: formData.get('address'),
+			payment: formData.get('payment'),
+			comment: formData.get('comment') || '',
+			items: this.cart.items,
+			total: this.cart.getTotal() + 300, // + доставка
+		}
+
+		try {
+			// Показываем индикатор загрузки
+			const submitBtn = form.querySelector('button[type="submit"]')
+			if (submitBtn) {
+				submitBtn.disabled = true
+				submitBtn.textContent = 'Отправляем заказ...'
+			}
+
+			// Здесь можно отправить заказ на сервер
+			console.log('Отправка заказа:', orderData)
+
+			// Имитируем отправку
+			await new Promise(resolve => setTimeout(resolve, 1000))
+
+			// Показываем сообщение об успехе
+			alert('Заказ успешно отправлен! Мы свяжемся с вами в ближайшее время.')
+
+			// Очищаем корзину
+			this.cart.clear()
+
+			// Закрываем корзину
+			this.toggleCart(true)
+		} catch (error) {
+			console.error('Ошибка отправки заказа:', error)
+			alert(
+				'Произошла ошибка при отправке заказа. Пожалуйста, попробуйте еще раз.'
+			)
+		} finally {
+			// Возвращаем кнопку в исходное состояние
+			const submitBtn = form.querySelector('button[type="submit"]')
+			if (submitBtn) {
+				submitBtn.disabled = false
+				submitBtn.textContent = 'Оформить заказ'
+			}
+		}
 	}
 }
 

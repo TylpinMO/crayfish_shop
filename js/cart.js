@@ -196,6 +196,13 @@ class ShoppingCart {
 	}
 
 	/**
+	 * Alias for updateUI for backward compatibility
+	 */
+	updateCartUI() {
+		this.updateUI()
+	}
+
+	/**
 	 * Update cart count badge
 	 */
 	updateCartCount() {
@@ -268,11 +275,26 @@ class ShoppingCart {
 	 * Update cart summary
 	 */
 	updateCartSummary() {
-		const total = this.getTotal()
-		const totalElements = document.querySelectorAll('.cart-total')
+		const subtotal = this.getTotal()
+		const delivery = 300 // фиксированная стоимость доставки
+		const total = subtotal + delivery
 
+		// Обновляем подитог товаров
+		const subtotalElement = document.getElementById('cart-subtotal')
+		if (subtotalElement) {
+			subtotalElement.textContent = `${subtotal.toLocaleString()}₽`
+		}
+
+		// Обновляем общую сумму
+		const totalElement = document.getElementById('cart-total')
+		if (totalElement) {
+			totalElement.textContent = `${total.toLocaleString()}₽`
+		}
+
+		// Обновляем все элементы с классом cart-total (если есть)
+		const totalElements = document.querySelectorAll('.cart-total')
 		totalElements.forEach(element => {
-			element.textContent = `${total.toLocaleString()} ₽`
+			element.textContent = `${total.toLocaleString()}₽`
 		})
 	}
 }

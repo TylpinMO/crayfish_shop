@@ -11,23 +11,29 @@ class AdminAuth {
 		try {
 			// Check if we have a stored token
 			const token = window.adminAPI.getToken()
-			if (token) {
+			if (token && token.length > 10) {
 				// Verify token with server
-				const result = await window.adminAPI.request('/admin-auth', {
-					method: 'POST',
-					body: { action: 'verify' },
-				})
+				try {
+					const result = await window.adminAPI.request('/admin-auth', {
+						method: 'POST',
+						body: { action: 'verify' },
+					})
 
-				if (result.success) {
-					this.currentUser = result.user
-					this.showAdminPanel()
-				} else {
-					window.adminAPI.removeToken()
-					this.showLoginForm()
+					if (result.success && result.user) {
+						this.currentUser = result.user
+						this.showAdminPanel()
+						return
+					}
+				} catch (verifyError) {
+					console.log('Token verification failed:', verifyError.message)
 				}
-			} else {
-				this.showLoginForm()
+
+				// If verification failed, remove invalid token
+				window.adminAPI.removeToken()
 			}
+
+			// Show login form if no token or verification failed
+			this.showLoginForm()
 		} catch (error) {
 			console.error('Auth initialization error:', error)
 			window.adminAPI.removeToken()
