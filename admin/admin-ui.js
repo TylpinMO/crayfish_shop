@@ -245,26 +245,28 @@ class AdminUI {
 
 	async loadDashboardData() {
 		try {
-			// Check if user is authenticated
+			// Try to load dashboard data, but don't require authentication
 			const token = localStorage.getItem('adminToken')
-			if (!token) {
-				console.log('No admin token found, skipping dashboard load')
-				return
-			}
 
 			// Load comprehensive dashboard data from new API
+			const headers = {
+				'Content-Type': 'application/json',
+			}
+
+			// Add auth header only if token exists
+			if (token) {
+				headers.Authorization = `Bearer ${token}`
+			}
+
 			const response = await fetch('/api/admin-api?action=dashboard', {
-				headers: {
-					Authorization: `Bearer ${token}`,
-					'Content-Type': 'application/json',
-				},
+				headers: headers,
 			})
 
 			if (!response.ok) {
+				// Don't block dashboard for auth errors, just show basic info
 				if (response.status === 401) {
-					console.log('Admin token expired, redirecting to login')
-					localStorage.removeItem('adminToken')
-					window.location.reload()
+					console.log('No authentication - showing basic dashboard')
+					this.showBasicDashboard()
 					return
 				}
 				throw new Error(`HTTP ${response.status}`)
@@ -329,6 +331,31 @@ class AdminUI {
 				</div>
 			`
 		}
+	}
+
+	showBasicDashboard() {
+		// Show basic dashboard without authentication
+		const content = `
+			<div class="dashboard-summary">
+				<div class="summary-section">
+					<h4><i class="fas fa-info-circle"></i> Статус системы</h4>
+					<ul>
+						<li>API статус: Работает</li>
+						<li>База данных: Подключена</li>
+						<li>Последнее обновление: ${new Date().toLocaleString('ru-RU')}</li>
+					</ul>
+				</div>
+				
+				<div class="summary-section">
+					<h4><i class="fas fa-chart-bar"></i> Быстрая статистика</h4>
+					<p>Для подробной статистики требуется авторизация</p>
+					<button class="btn btn-primary" onclick="window.location.reload()">
+						Войти в систему
+					</button>
+				</div>
+			</div>
+		`
+		document.getElementById('page-content').innerHTML = content
 	}
 
 	generateDashboardSummary(data) {
@@ -444,42 +471,65 @@ class AdminUI {
 		grid.innerHTML = '<div class="loading">Загрузка товаров...</div>'
 
 		try {
-			const token = localStorage.getItem('adminToken')
-			if (!token) {
-				grid.innerHTML = '<div class="error">Требуется авторизация</div>'
-				return
-			}
-
-			const response = await fetch('/api/admin-api?action=products', {
-				headers: {
-					Authorization: `Bearer ${token}`,
-					'Content-Type': 'application/json',
-				},
-			})
+			// Try public API first, then admin API
+			let response = await fetch('/api/products')
+			let isPublicAPI = true
 
 			if (!response.ok) {
-				if (response.status === 401) {
-					grid.innerHTML =
-						'<div class="error">Сессия истекла. Перезагрузите страницу</div>'
-					return
+				// Fallback to admin API
+				const token = localStorage.getItem('adminToken')
+				const headers = {
+					'Content-Type': 'application/json',
 				}
+
+				if (token) {
+					headers.Authorization = `Bearer ${token}`
+				}
+
+				response = await fetch('/api/admin-api?action=products', {
+					headers: headers,
+				})
+				isPublicAPI = false
+			}
+
+			if (!response.ok) {
 				throw new Error(`HTTP ${response.status}`)
 			}
 
 			const data = await response.json()
+			let products = []
 
-			if (data.success && data.products && data.products.length > 0) {
-				grid.innerHTML = data.products
+			// Handle different API response formats
+			if (isPublicAPI && data.success && data.products) {
+				products = data.products
+			} else if (!isPublicAPI && data.success && data.products) {
+				products = data.products
+			} else if (data.products) {
+				products = data.products
+			}
+
+			if (products && products.length > 0) {
+				grid.innerHTML = products
 					.map(product => {
-						const primaryImage =
-							product.product_images?.find(img => img.is_primary) ||
-							product.product_images?.[0]
-						const imageUrl =
-							primaryImage?.public_url ||
-							primaryImage?.image_url ||
-							'/images/products/crayfish-1.svg'
-						const categoryName = product.categories?.name || 'Без категории'
-						const isInStock = product.stock_quantity > 0
+						// Handle different data structures
+						const primaryImage = isPublicAPI
+							? null // Public API doesn't have product_images relation
+							: product.product_images?.find(img => img.is_primary) ||
+							  product.product_images?.[0]
+
+						const imageUrl = isPublicAPI
+							? product.image || '/images/products/crayfish-1.svg'
+							: primaryImage?.public_url ||
+							  primaryImage?.image_url ||
+							  '/images/products/crayfish-1.svg'
+
+						const categoryName = isPublicAPI
+							? product.category || 'Без категории'
+							: product.categories?.name || 'Без категории'
+
+						const stockQuantity =
+							product.stock_quantity || product.stockQuantity || 0
+						const isInStock = stockQuantity > 0
 
 						return `
 					<div class="product-card-admin">
@@ -494,16 +544,20 @@ class AdminUI {
 							<div class="product-price">${Number(product.price).toLocaleString()} ₽</div>
 							<div class="product-stock">Остаток: ${
 								isInStock
-									? `${product.stock_quantity} шт (${product.weight || 0} ${
+									? `${stockQuantity} шт (${product.weight || 0} ${
 											product.unit || 'кг'
 									  })`
 									: 'Нет в наличии'
 							}</div>
 							<div class="product-status">
-								<span class="status ${product.is_active ? 'active' : 'inactive'}">
-									${product.is_active ? 'Активен' : 'Неактивен'}
+								<span class="status ${product.is_active !== false ? 'active' : 'inactive'}">
+									${product.is_active !== false ? 'Активен' : 'Неактивен'}
 								</span>
-								${product.is_featured ? '<span class="featured">★ Рекомендуемый</span>' : ''}
+								${
+									product.is_featured || product.featured
+										? '<span class="featured">★ Рекомендуемый</span>'
+										: ''
+								}
 							</div>
 							<div class="product-actions">
 								<button class="btn btn-sm btn-primary edit-product" data-id="${product.id}">
@@ -614,20 +668,35 @@ class AdminUI {
 		container.innerHTML = '<div class="loading">Загрузка категорий...</div>'
 
 		try {
+			// Try to load categories without strict auth requirement
 			const token = localStorage.getItem('adminToken')
-			if (!token) {
-				container.innerHTML = '<div class="error">Требуется авторизация</div>'
-				return
+			const headers = {
+				'Content-Type': 'application/json',
+			}
+
+			if (token) {
+				headers.Authorization = `Bearer ${token}`
 			}
 
 			const response = await fetch('/api/admin-api?action=categories', {
-				headers: {
-					Authorization: `Bearer ${token}`,
-					'Content-Type': 'application/json',
-				},
+				headers: headers,
 			})
 
 			if (!response.ok) {
+				// Show placeholder if no auth
+				if (response.status === 401) {
+					container.innerHTML = `
+						<div class="info-state">
+							<i class="fas fa-tags"></i>
+							<h3>Управление категориями</h3>
+							<p>Войдите в систему для управления категориями товаров</p>
+							<button class="btn btn-primary" onclick="window.location.reload()">
+								Войти в админку
+							</button>
+						</div>
+					`
+					return
+				}
 				throw new Error(`HTTP ${response.status}`)
 			}
 

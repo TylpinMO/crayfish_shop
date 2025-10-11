@@ -265,14 +265,16 @@ class FishShopApp {
 	setupCartUIEvents() {
 		// Main cart toggle button (header cart icon)
 		const cartToggleBtn = document.getElementById('cart-toggle')
+		console.log('🛒 Setting up cart events, button found:', !!cartToggleBtn)
 		if (cartToggleBtn) {
 			cartToggleBtn.addEventListener('click', e => {
+				console.log('🛒 Cart button clicked!')
 				e.preventDefault()
 				e.stopPropagation()
 				this.toggleCart()
 			})
 		} else {
-			console.warn('Cart toggle button not found')
+			console.error('❌ Cart toggle button not found!')
 		}
 
 		// Cart toggle buttons with data attribute (if any)
