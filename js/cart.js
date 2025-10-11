@@ -145,22 +145,19 @@ class ShoppingCart {
 	}
 
 	/**
-	 * Bind UI events
+	 * Bind UI events - Simplified, main events handled by app.js
 	 */
 	bindEvents() {
-		// Cart toggle
-		const cartToggle = document.getElementById('cart-toggle')
-		const closeCart = document.getElementById('close-cart')
-		const cartOverlay = document.getElementById('cart-overlay')
-
-		if (cartToggle) cartToggle.addEventListener('click', () => this.openCart())
-		if (closeCart) closeCart.addEventListener('click', () => this.closeCart())
-		if (cartOverlay)
-			cartOverlay.addEventListener('click', () => this.closeCart())
-
-		// ESC key to close cart
+		// Only bind ESC key here, other events handled by app.js
 		document.addEventListener('keydown', e => {
-			if (e.key === 'Escape') this.closeCart()
+			if (e.key === 'Escape') {
+				// Use global app method if available
+				if (window.fishShopApp && window.fishShopApp.toggleCart) {
+					window.fishShopApp.toggleCart(true)
+				} else {
+					this.closeCart()
+				}
+			}
 		})
 	}
 

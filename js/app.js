@@ -43,7 +43,8 @@ class FishShopApp {
 			this.initContactForm()
 			this.initAddressAutocomplete()
 
-			// Load products
+			// Load products and categories
+			await this.productsManager.loadCategoryFilters()
 			await this.productsManager.loadProducts()
 
 			this.initialized = true
@@ -399,13 +400,25 @@ class FishShopApp {
 	 */
 	initNavigation() {
 		// Mobile menu toggle
-		const mobileMenuToggle = document.querySelector('.mobile-menu-toggle')
+		const mobileMenuToggle =
+			document.querySelector('.nav-toggle') ||
+			document.getElementById('nav-toggle')
 		const mainNav = document.querySelector('.main-nav')
 
+		console.log('🍔 Mobile menu setup:', {
+			toggle: !!mobileMenuToggle,
+			nav: !!mainNav,
+		})
+
 		if (mobileMenuToggle && mainNav) {
-			mobileMenuToggle.addEventListener('click', () => {
+			mobileMenuToggle.addEventListener('click', e => {
+				e.preventDefault()
+				console.log('🍔 Mobile menu clicked!')
 				mainNav.classList.toggle('active')
+				mobileMenuToggle.classList.toggle('active')
 			})
+		} else {
+			console.warn('🍔 Mobile menu elements not found!')
 		}
 
 		// Smooth scrolling for anchor links
@@ -607,6 +620,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 		// Expose globals for backward compatibility
 		cart = fishShopApp.cart
 		productsManager = fishShopApp.productsManager
+		window.fishShopApp = fishShopApp
 
 		// Expose debug toggle globally
 		window.toggleDebug = () => fishShopApp.toggleDebug()

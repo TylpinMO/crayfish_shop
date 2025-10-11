@@ -29,10 +29,19 @@ class AdminUI {
 		const toggle = document.getElementById('sidebar-toggle')
 		const sidebar = document.querySelector('.admin-sidebar')
 
-		if (toggle) {
+		console.log('🍔 Admin sidebar setup:', {
+			toggle: !!toggle,
+			sidebar: !!sidebar,
+		})
+
+		if (toggle && sidebar) {
 			toggle.addEventListener('click', () => {
+				console.log('🍔 Admin sidebar toggle clicked!')
 				sidebar.classList.toggle('mobile-open')
+				console.log('🍔 Sidebar classes:', sidebar.className)
 			})
+		} else {
+			console.warn('🍔 Admin sidebar elements not found!')
 		}
 	}
 

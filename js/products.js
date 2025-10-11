@@ -278,6 +278,99 @@ class ProductsManager {
 	getFeaturedProducts() {
 		return this.products.filter(product => product.isFeatured)
 	}
+
+	/**
+	 * Load and display category filters
+	 */
+	async loadCategoryFilters() {
+		try {
+			// Try to get categories from API
+			const response = await fetch('/api/admin-api?action=categories')
+			if (response.ok) {
+				const data = await response.json()
+				if (data.success && data.categories) {
+					this.categories = data.categories
+				}
+			}
+		} catch (error) {
+			console.log('Could not load categories from API, using fallback')
+			// Use fallback categories if API fails
+			this.categories = [
+				{ id: 1, name: 'Раки' },
+				{ id: 2, name: 'Креветки' },
+				{ id: 3, name: 'Крабы' },
+				{ id: 4, name: 'Икра' },
+				{ id: 5, name: 'Рыба' },
+				{ id: 6, name: 'Морепродукты' },
+			]
+		}
+
+		this.renderCategoryFilters()
+	}
+
+	/**
+	 * Render category filter buttons
+	 */
+	renderCategoryFilters() {
+		const filtersContainer = document.getElementById('category-filters')
+		if (!filtersContainer) return
+
+		// Keep "All products" button and add categories
+		const categoryButtons = this.categories
+			.map(
+				category => `
+			<button class="category-btn" data-category="${category.id}">
+				<i class="fas fa-tag"></i>
+				${category.name}
+			</button>
+		`
+			)
+			.join('')
+
+		// Add category buttons after "All products" button
+		const allButton = filtersContainer.querySelector('[data-category="all"]')
+		if (allButton) {
+			allButton.insertAdjacentHTML('afterend', categoryButtons)
+		}
+
+		// Bind click events
+		this.bindCategoryFilters()
+	}
+
+	/**
+	 * Bind category filter events
+	 */
+	bindCategoryFilters() {
+		const filterButtons = document.querySelectorAll('.category-btn')
+		filterButtons.forEach(button => {
+			button.addEventListener('click', e => {
+				e.preventDefault()
+
+				// Update active state
+				filterButtons.forEach(btn => btn.classList.remove('active'))
+				button.classList.add('active')
+
+				// Filter products
+				const categoryId = button.dataset.category
+				this.filterProductsByCategory(categoryId)
+			})
+		})
+	}
+
+	/**
+	 * Filter products by category
+	 */
+	filterProductsByCategory(categoryId) {
+		if (categoryId === 'all') {
+			this.updateUI(this.products)
+		} else {
+			const filteredProducts = this.products.filter(
+				product =>
+					product.category_id == categoryId || product.categoryId == categoryId
+			)
+			this.updateUI(filteredProducts)
+		}
+	}
 }
 
 // Export for use in other modules
