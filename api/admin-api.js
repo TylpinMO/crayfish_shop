@@ -150,7 +150,17 @@ async function getProducts(req, res) {
 			`
 			*,
 			categories (id, name),
-			product_images (image_url, alt_text, is_primary)
+			product_images (
+				id,
+				image_url,
+				alt_text,
+				is_primary,
+				storage_bucket,
+				storage_path,
+				public_url,
+				mime_type,
+				file_size
+			)
 		`
 		)
 		.order('sort_order', { ascending: true })

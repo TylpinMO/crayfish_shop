@@ -107,6 +107,7 @@ export default async function handler(req, res) {
 					name
 				),
 				product_images (
+					id,
 					image_url,
 					alt_text,
 					is_primary,
@@ -152,16 +153,10 @@ export default async function handler(req, res) {
 						product.product_images?.[0]
 					const categoryName = product.categories?.name || 'Товары'
 
-					// Get image URL from Supabase Storage or fallback
-					let imageUrl
-					if (primaryImage?.storage_path || primaryImage?.public_url) {
-						imageUrl = getStorageImageUrl(
-							primaryImage.storage_path,
-							primaryImage.public_url
-						)
-					} else {
-						imageUrl = normalizeImageUrl(primaryImage?.image_url)
-					}
+					// Get image URL - priority: public_url > storage_path > image_url
+					let imageUrl = primaryImage?.public_url || 
+								  getStorageImageUrl(primaryImage?.storage_path, primaryImage?.public_url) ||
+								  normalizeImageUrl(primaryImage?.image_url)
 
 					if (!product.name || typeof product.price !== 'number') {
 						console.warn(`Invalid product data:`, {
