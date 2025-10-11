@@ -160,42 +160,4 @@ class AdminAuth {
 	}
 }
 
-// Initialize auth when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-	window.adminAuth = new AdminAuth()
-
-	// Bind login form
-	const loginForm = document.getElementById('login-form')
-	if (loginForm) {
-		loginForm.addEventListener('submit', async e => {
-			e.preventDefault()
-
-			const email = document.getElementById('email').value
-			const password = document.getElementById('password').value
-
-			const loginBtn = loginForm.querySelector('.btn-login')
-			const originalText = loginBtn.innerHTML
-
-			loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Вход...'
-			loginBtn.disabled = true
-
-			const result = await window.adminAuth.login(email, password)
-
-			loginBtn.innerHTML = originalText
-			loginBtn.disabled = false
-
-			if (!result.success) {
-				// Error is already shown in notification
-				console.error('Login failed:', result.error)
-			}
-		})
-	}
-
-	// Bind logout button
-	const logoutBtn = document.getElementById('logout-btn')
-	if (logoutBtn) {
-		logoutBtn.addEventListener('click', () => {
-			window.adminAuth.logout()
-		})
-	}
-})
+// AdminAuth class ready for initialization from index.html

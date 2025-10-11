@@ -878,34 +878,7 @@ class AdminUI {
 	}
 }
 
-// Initialize UI when admin panel is shown
-window.adminUI = new AdminUI()
-
-// App Initialization and Global Setup
-document.addEventListener('DOMContentLoaded', () => {
-	console.log('🔐 Fish Shop Admin Panel loaded successfully!')
-
-	// Ensure all components are initialized
-	if (window.adminAPI && window.adminAuth && window.adminUI) {
-		console.log('✅ All admin components initialized')
-
-		if (window.adminAuth.currentUser) {
-			console.log(
-				'👤 User already authenticated:',
-				window.adminAuth.currentUser.email
-			)
-		}
-	} else {
-		console.error('❌ Missing admin components:', {
-			adminAPI: !!window.adminAPI,
-			adminAuth: !!window.adminAuth,
-			adminUI: !!window.adminUI,
-		})
-	}
-
-	setupGlobalErrorHandling()
-	setupKeyboardShortcuts()
-})
+// AdminUI class ready for initialization from index.html
 
 function setupGlobalErrorHandling() {
 	window.addEventListener('unhandledrejection', event => {

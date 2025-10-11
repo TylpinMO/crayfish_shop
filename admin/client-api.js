@@ -111,4 +111,4 @@ class AdminAPI {
 	}
 }
 
-window.adminAPI = new AdminAPI()
+// AdminAPI class ready for initialization from index.html

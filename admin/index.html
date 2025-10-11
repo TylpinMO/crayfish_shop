@@ -159,16 +159,129 @@
 
 		<!-- Initialize Admin Panel -->
 		<script>
-			document.addEventListener('DOMContentLoaded', () => {
-				// Initialize API first
-				window.adminAPI = new AdminAPI()
+			document.addEventListener('DOMContentLoaded', async () => {
+				try {
+					console.log('🔐 Initializing Fish Shop Admin Panel...')
+					
+					// Initialize API first
+					window.adminAPI = new AdminAPI()
+					console.log('📡 AdminAPI initialized')
 
-				// Then Auth (depends on API)
-				window.adminAuth = new AdminAuth()
+					// Then Auth (depends on API)
+					window.adminAuth = new AdminAuth()
+					console.log('🔐 AdminAuth initialized')
 
-				// Finally UI (depends on Auth)
-				window.adminUI = new AdminUI()
+					// Finally UI (depends on Auth)
+					window.adminUI = new AdminUI()
+					console.log('🎨 AdminUI initialized')
+					
+					// Initialize ProductManager
+					window.productManager = new ProductManager(window.adminUI)
+					console.log('📦 ProductManager initialized')
+					
+					// Setup form handlers
+					setupFormHandlers()
+					
+					// Setup global handlers
+					setupGlobalErrorHandling()
+					setupKeyboardShortcuts()
+					
+					console.log('✅ All admin components initialized successfully!')
+					
+				} catch (error) {
+					console.error('❌ Failed to initialize admin panel:', error)
+				}
 			})
+			
+			function setupFormHandlers() {
+				// Login form
+				const loginForm = document.getElementById('login-form')
+				if (loginForm) {
+					loginForm.addEventListener('submit', async e => {
+						e.preventDefault()
+
+						const email = document.getElementById('email').value
+						const password = document.getElementById('password').value
+
+						const loginBtn = loginForm.querySelector('.btn-login')
+						const originalText = loginBtn.innerHTML
+
+						loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Вход...'
+						loginBtn.disabled = true
+
+						const result = await window.adminAuth.login(email, password)
+
+						loginBtn.innerHTML = originalText
+						loginBtn.disabled = false
+
+						if (!result.success) {
+							console.error('Login failed:', result.error)
+						}
+					})
+				}
+
+				// Logout button
+				const logoutBtn = document.getElementById('logout-btn')
+				if (logoutBtn) {
+					logoutBtn.addEventListener('click', () => {
+						window.adminAuth.logout()
+					})
+				}
+				
+				// Mobile sidebar toggle
+				const sidebarToggle = document.getElementById('sidebar-toggle')
+				const sidebar = document.querySelector('.admin-sidebar')
+				if (sidebarToggle && sidebar) {
+					sidebarToggle.addEventListener('click', (e) => {
+						e.preventDefault()
+						e.stopPropagation()
+						sidebar.classList.toggle('mobile-open')
+						console.log('📱 Sidebar toggled:', sidebar.classList.contains('mobile-open'))
+					})
+					
+					// Close sidebar when clicking outside on mobile
+					document.addEventListener('click', (e) => {
+						if (window.innerWidth <= 768 && 
+							!sidebar.contains(e.target) && 
+							!sidebarToggle.contains(e.target) &&
+							sidebar.classList.contains('mobile-open')) {
+							sidebar.classList.remove('mobile-open')
+						}
+					})
+				}
+			}
+			
+			function setupGlobalErrorHandling() {
+				window.addEventListener('unhandledrejection', event => {
+					console.error('Unhandled promise rejection:', event.reason)
+					if (window.adminAuth) {
+						window.adminAuth.showNotification(
+							'Произошла ошибка. Попробуйте обновить страницу.',
+							'error'
+						)
+					}
+				})
+
+				window.addEventListener('error', event => {
+					console.error('JavaScript error:', event.error)
+				})
+			}
+
+			function setupKeyboardShortcuts() {
+				document.addEventListener('keydown', e => {
+					if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+						e.preventDefault()
+						console.log('Quick navigation shortcut pressed')
+					}
+
+					if (e.key === 'Escape') {
+						const modals = document.querySelectorAll('.modal.show, .dropdown.open')  
+						modals.forEach(modal => {
+							modal.classList.remove('show', 'open')
+						})
+					}
+				})
+			}
 		</script>
 	</body>
 </html>

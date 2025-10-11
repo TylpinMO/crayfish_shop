@@ -312,9 +312,4 @@ class ProductManager {
 	}
 }
 
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-	if (window.adminUI) {
-		window.productManager = new ProductManager(window.adminUI)
-	}
-})
+// ProductManager class ready for initialization from index.html
