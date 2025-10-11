@@ -229,32 +229,47 @@ class FishShopApp {
 	 * Toggle cart visibility
 	 */
 	toggleCart(forceClose = false) {
+		console.log('🛒 toggleCart called, forceClose:', forceClose)
 		const cartSidebar = document.getElementById('cart-sidebar')
 		const cartOverlay = document.getElementById('cart-overlay')
 
+		console.log('🛒 Elements found:', {
+			cartSidebar: !!cartSidebar,
+			cartOverlay: !!cartOverlay,
+		})
+
 		if (!cartSidebar) {
-			console.error('Cart sidebar element not found')
+			console.error('❌ Cart sidebar element not found')
 			return
 		}
 
 		const isOpen = cartSidebar.classList.contains('open')
+		console.log('🛒 Current state - isOpen:', isOpen)
 
 		if (forceClose || isOpen) {
 			// Close cart
+			console.log('🛒 Closing cart...')
 			cartSidebar.classList.remove('open')
 			cartOverlay?.classList.remove('active')
 			document.body.classList.remove('cart-open')
 			this.log('Cart closed')
 		} else {
 			// Open cart
+			console.log('🛒 Opening cart...')
 			cartSidebar.classList.add('open')
 			cartOverlay?.classList.add('active')
 			document.body.classList.add('cart-open')
 			this.log('Cart opened')
+			console.log('🛒 Cart classes after opening:', {
+				sidebarClasses: cartSidebar.className,
+				overlayClasses: cartOverlay?.className,
+				bodyClasses: document.body.className,
+			})
 		}
 
 		// Update cart content when opening
 		if (!isOpen && !forceClose) {
+			console.log('🛒 Updating cart UI...')
 			this.cart?.updateUI()
 		}
 	}

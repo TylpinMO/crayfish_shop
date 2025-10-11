@@ -6,19 +6,35 @@
 const jwt = require('jsonwebtoken')
 const { createClient } = require('@supabase/supabase-js')
 
-// Initialize Supabase
-const supabase = createClient(
-	process.env.SUPABASE_URL,
-	process.env.SUPABASE_SERVICE_KEY,
-	{
-		auth: {
-			autoRefreshToken: false,
-			persistSession: false,
-		},
-	}
-)
+// Initialize Supabase lazily
+let supabase = null
 
-const JWT_SECRET = process.env.JWT_SECRET
+function getSupabase() {
+	if (!supabase) {
+		if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+			throw new Error('Missing Supabase environment variables')
+		}
+
+		supabase = createClient(
+			process.env.SUPABASE_URL,
+			process.env.SUPABASE_SERVICE_KEY,
+			{
+				auth: {
+					autoRefreshToken: false,
+					persistSession: false,
+				},
+			}
+		)
+	}
+	return supabase
+}
+
+function getJWTSecret() {
+	if (!process.env.JWT_SECRET) {
+		throw new Error('Missing JWT_SECRET environment variable')
+	}
+	return process.env.JWT_SECRET
+}
 
 function verifyAdminToken(authHeader) {
 	if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -26,6 +42,7 @@ function verifyAdminToken(authHeader) {
 	}
 
 	const token = authHeader.substring(7)
+	const JWT_SECRET = getJWTSecret()
 	const decoded = jwt.verify(token, JWT_SECRET)
 
 	if (!decoded.isAdmin) {
@@ -53,11 +70,25 @@ export default async function handler(req, res) {
 	}
 
 	try {
-		// Verify admin authentication
-		const admin = verifyAdminToken(req.headers.authorization)
-		console.log(`Admin API access by: ${admin.email}`)
-
 		const { action } = req.query
+
+		// Some actions can be public (dashboard stats, products view)
+		const publicActions = ['dashboard', 'products', 'categories']
+		const isPublicAction = publicActions.includes(action)
+
+		// Verify admin authentication for protected actions
+		let admin = null
+		if (!isPublicAction || req.headers.authorization) {
+			try {
+				admin = verifyAdminToken(req.headers.authorization)
+				console.log(`Admin API access by: ${admin.email}`)
+			} catch (authError) {
+				if (!isPublicAction) {
+					throw authError
+				}
+				console.log('Public access to', action)
+			}
+		}
 
 		switch (req.method) {
 			case 'GET':
@@ -74,7 +105,13 @@ export default async function handler(req, res) {
 				})
 		}
 	} catch (error) {
-		console.error('Admin API error:', error)
+		console.error('🔥 Admin API error:', {
+			message: error.message,
+			name: error.name,
+			stack: error.stack,
+			action: req.query?.action,
+			method: req.method,
+		})
 
 		if (error.name === 'JsonWebTokenError') {
 			return res.status(401).json({
@@ -90,8 +127,17 @@ export default async function handler(req, res) {
 			})
 		}
 
+		if (error.message.includes('Missing Supabase environment variables')) {
+			return res.status(500).json({
+				error: 'Server configuration error',
+				code: 'CONFIG_ERROR',
+			})
+		}
+
 		return res.status(500).json({
 			error: error.message || 'Internal server error',
+			code: 'INTERNAL_ERROR',
+			...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
 		})
 	}
 }
@@ -144,6 +190,7 @@ async function handleDelete(req, res, action, admin) {
 
 // Implementation functions
 async function getProducts(req, res) {
+	const supabase = getSupabase()
 	const { data: products, error } = await supabase
 		.from('products')
 		.select(
@@ -163,7 +210,7 @@ async function getProducts(req, res) {
 			)
 		`
 		)
-		.order('sort_order', { ascending: true })
+		.order('created_at', { ascending: false })
 
 	if (error) {
 		return res.status(500).json({ error: error.message })
@@ -173,10 +220,11 @@ async function getProducts(req, res) {
 }
 
 async function getCategories(req, res) {
+	const supabase = getSupabase()
 	const { data: categories, error } = await supabase
 		.from('categories')
 		.select('*')
-		.order('sort_order', { ascending: true })
+		.order('created_at', { ascending: true })
 
 	if (error) {
 		return res.status(500).json({ error: error.message })
@@ -187,6 +235,18 @@ async function getCategories(req, res) {
 
 async function getDashboard(req, res) {
 	try {
+		console.log('🔧 Dashboard API called')
+		console.log(
+			'🔧 Supabase URL:',
+			process.env.SUPABASE_URL ? 'Set' : 'Missing'
+		)
+		console.log(
+			'🔧 Service Key:',
+			process.env.SUPABASE_SERVICE_KEY ? 'Set' : 'Missing'
+		)
+
+		const supabase = getSupabase()
+
 		// Get comprehensive data
 		const [productsResult, categoriesResult, imagesResult] = await Promise.all([
 			supabase
@@ -198,9 +258,28 @@ async function getDashboard(req, res) {
 			supabase.from('product_images').select('id, product_id'),
 		])
 
+		console.log('🔧 Database results:', {
+			products: productsResult.error
+				? 'ERROR: ' + productsResult.error.message
+				: `${productsResult.data?.length} items`,
+			categories: categoriesResult.error
+				? 'ERROR: ' + categoriesResult.error.message
+				: `${categoriesResult.data?.length} items`,
+			images: imagesResult.error
+				? 'ERROR: ' + imagesResult.error.message
+				: `${imagesResult.data?.length} items`,
+		})
+
 		if (productsResult.error || categoriesResult.error || imagesResult.error) {
+			const errors = {
+				products: productsResult.error?.message,
+				categories: categoriesResult.error?.message,
+				images: imagesResult.error?.message,
+			}
+			console.error('🔧 Database errors:', errors)
 			return res.status(500).json({
 				error: 'Failed to fetch dashboard data',
+				details: errors,
 			})
 		}
 
