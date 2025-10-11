@@ -232,17 +232,9 @@ class FishShopApp {
 	toggleCart(forceClose = false) {
 		console.log('🛒 toggleCart called, forceClose:', forceClose)
 
-		// Prevent rapid toggling
-		if (this.cartToggling) {
-			console.log('🛒 Cart already toggling, ignoring...')
-			return
-		}
-		this.cartToggling = true
-
 		const cartOverlay = document.getElementById('cart-overlay')
 		if (!cartOverlay) {
 			console.error('❌ Cart overlay element not found')
-			this.cartToggling = false
 			return
 		}
 
@@ -274,13 +266,7 @@ class FishShopApp {
 			console.log('🛒 Updating cart UI...')
 			this.cart?.updateUI()
 		}
-
-		// Reset toggle flag after a delay
-		setTimeout(() => {
-			this.cartToggling = false
-		}, 300)
 	}
-
 	/**
 	 * Setup cart UI event listeners
 	 */
@@ -612,27 +598,6 @@ class FishShopApp {
 
 // Global instances
 let fishShopApp
-let cart
-let productsManager
-
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', async () => {
-	try {
-		fishShopApp = new FishShopApp()
-		await fishShopApp.init()
-
-		// Expose globals for backward compatibility
-		cart = fishShopApp.cart
-		productsManager = fishShopApp.productsManager
-		window.fishShopApp = fishShopApp
-
-		// Expose debug toggle globally
-		window.toggleDebug = () => fishShopApp.toggleDebug()
-	} catch (error) {
-		console.error('Failed to initialize Fish Shop App:', error)
-	}
-})
-
 // Export for testing
 if (typeof module !== 'undefined' && module.exports) {
 	module.exports = { FishShopApp, ShoppingCart, ProductsManager }

@@ -506,9 +506,16 @@
 		<!-- Initialize Application -->
 		<script>
 			// Initialize Fish Shop App when DOM is ready
-			document.addEventListener('DOMContentLoaded', () => {
-				window.fishShopApp = new FishShopApp()
-				window.fishShopApp.init()
+			document.addEventListener('DOMContentLoaded', async () => {
+				try {
+					window.fishShopApp = new FishShopApp()
+					await window.fishShopApp.init()
+
+					// Expose debug toggle globally
+					window.toggleDebug = () => window.fishShopApp.toggleDebug()
+				} catch (error) {
+					console.error('Failed to initialize Fish Shop App:', error)
+				}
 			})
 		</script>
 	</body>
