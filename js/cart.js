@@ -166,10 +166,16 @@ class ShoppingCart {
 	 */
 	openCart() {
 		const cartOverlay = document.getElementById('cart-overlay')
+		const cartSidebar = document.getElementById('cart-sidebar')
+
 		if (cartOverlay) {
 			cartOverlay.classList.add('active')
-			document.body.style.overflow = 'hidden'
 		}
+		if (cartSidebar) {
+			cartSidebar.classList.add('open')
+		}
+		document.body.style.overflow = 'hidden'
+		document.body.classList.add('cart-open')
 	}
 
 	/**
@@ -177,10 +183,16 @@ class ShoppingCart {
 	 */
 	closeCart() {
 		const cartOverlay = document.getElementById('cart-overlay')
+		const cartSidebar = document.getElementById('cart-sidebar')
+
 		if (cartOverlay) {
 			cartOverlay.classList.remove('active')
-			document.body.style.overflow = ''
 		}
+		if (cartSidebar) {
+			cartSidebar.classList.remove('open')
+		}
+		document.body.style.overflow = ''
+		document.body.classList.remove('cart-open')
 	}
 
 	/**

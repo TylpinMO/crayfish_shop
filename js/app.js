@@ -231,48 +231,54 @@ class FishShopApp {
 	 */
 	toggleCart(forceClose = false) {
 		console.log('🛒 toggleCart called, forceClose:', forceClose)
-		const cartSidebar = document.getElementById('cart-sidebar')
+
+		// Prevent rapid toggling
+		if (this.cartToggling) {
+			console.log('🛒 Cart already toggling, ignoring...')
+			return
+		}
+		this.cartToggling = true
+
 		const cartOverlay = document.getElementById('cart-overlay')
-
-		console.log('🛒 Elements found:', {
-			cartSidebar: !!cartSidebar,
-			cartOverlay: !!cartOverlay,
-		})
-
-		if (!cartSidebar) {
-			console.error('❌ Cart sidebar element not found')
+		if (!cartOverlay) {
+			console.error('❌ Cart overlay element not found')
+			this.cartToggling = false
 			return
 		}
 
-		const isOpen = cartSidebar.classList.contains('open')
+		const isOpen = cartOverlay.classList.contains('active')
 		console.log('🛒 Current state - isOpen:', isOpen)
 
 		if (forceClose || isOpen) {
-			// Close cart
+			// Close cart using cart.js method
 			console.log('🛒 Closing cart...')
-			cartSidebar.classList.remove('open')
-			cartOverlay?.classList.remove('active')
-			document.body.classList.remove('cart-open')
+			if (this.cart && typeof this.cart.closeCart === 'function') {
+				this.cart.closeCart()
+			} else {
+				cartOverlay.classList.remove('active')
+				document.body.style.overflow = ''
+			}
 			this.log('Cart closed')
 		} else {
-			// Open cart
+			// Open cart using cart.js method
 			console.log('🛒 Opening cart...')
-			cartSidebar.classList.add('open')
-			cartOverlay?.classList.add('active')
-			document.body.classList.add('cart-open')
+			if (this.cart && typeof this.cart.openCart === 'function') {
+				this.cart.openCart()
+			} else {
+				cartOverlay.classList.add('active')
+				document.body.style.overflow = 'hidden'
+			}
 			this.log('Cart opened')
-			console.log('🛒 Cart classes after opening:', {
-				sidebarClasses: cartSidebar.className,
-				overlayClasses: cartOverlay?.className,
-				bodyClasses: document.body.className,
-			})
-		}
 
-		// Update cart content when opening
-		if (!isOpen && !forceClose) {
+			// Update cart content when opening
 			console.log('🛒 Updating cart UI...')
 			this.cart?.updateUI()
 		}
+
+		// Reset toggle flag after a delay
+		setTimeout(() => {
+			this.cartToggling = false
+		}, 300)
 	}
 
 	/**
@@ -334,15 +340,7 @@ class FishShopApp {
 			})
 		}
 
-		// ESC key to close cart
-		document.addEventListener('keydown', e => {
-			if (e.key === 'Escape') {
-				const cartSidebar = document.getElementById('cart-sidebar')
-				if (cartSidebar && cartSidebar.classList.contains('open')) {
-					this.toggleCart(true)
-				}
-			}
-		})
+		// ESC key handling is managed by cart.js
 
 		// Prevent body scroll when cart is open
 		const observer = new MutationObserver(mutations => {
@@ -403,11 +401,17 @@ class FishShopApp {
 		const mobileMenuToggle =
 			document.querySelector('.nav-toggle') ||
 			document.getElementById('nav-toggle')
-		const mainNav = document.querySelector('.main-nav')
+		const mainNav = document.querySelector('.nav-menu')
 
 		console.log('🍔 Mobile menu setup:', {
 			toggle: !!mobileMenuToggle,
 			nav: !!mainNav,
+			toggleElement: mobileMenuToggle,
+			navElement: mainNav,
+			navClasses: mainNav?.className,
+			allNavMenus: document.querySelectorAll('.nav-menu').length,
+			allNavToggles: document.querySelectorAll('.nav-toggle, #nav-toggle')
+				.length,
 		})
 
 		if (mobileMenuToggle && mainNav) {
