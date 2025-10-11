@@ -162,7 +162,7 @@
 			document.addEventListener('DOMContentLoaded', async () => {
 				try {
 					console.log('🔐 Initializing Fish Shop Admin Panel...')
-					
+
 					// Initialize API first
 					window.adminAPI = new AdminAPI()
 					console.log('📡 AdminAPI initialized')
@@ -174,25 +174,24 @@
 					// Finally UI (depends on Auth)
 					window.adminUI = new AdminUI()
 					console.log('🎨 AdminUI initialized')
-					
+
 					// Initialize ProductManager
 					window.productManager = new ProductManager(window.adminUI)
 					console.log('📦 ProductManager initialized')
-					
+
 					// Setup form handlers
 					setupFormHandlers()
-					
+
 					// Setup global handlers
 					setupGlobalErrorHandling()
 					setupKeyboardShortcuts()
-					
+
 					console.log('✅ All admin components initialized successfully!')
-					
 				} catch (error) {
 					console.error('❌ Failed to initialize admin panel:', error)
 				}
 			})
-			
+
 			function setupFormHandlers() {
 				// Login form
 				const loginForm = document.getElementById('login-form')
@@ -206,7 +205,8 @@
 						const loginBtn = loginForm.querySelector('.btn-login')
 						const originalText = loginBtn.innerHTML
 
-						loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Вход...'
+						loginBtn.innerHTML =
+							'<i class="fas fa-spinner fa-spin"></i> Вход...'
 						loginBtn.disabled = true
 
 						const result = await window.adminAuth.login(email, password)
@@ -227,30 +227,42 @@
 						window.adminAuth.logout()
 					})
 				}
-				
+
 				// Mobile sidebar toggle
 				const sidebarToggle = document.getElementById('sidebar-toggle')
 				const sidebar = document.querySelector('.admin-sidebar')
+				
+				console.log('🍔 Setting up sidebar toggle:', {
+					toggle: !!sidebarToggle,
+					sidebar: !!sidebar,
+					sidebarClasses: sidebar?.className
+				})
+				
 				if (sidebarToggle && sidebar) {
-					sidebarToggle.addEventListener('click', (e) => {
+					sidebarToggle.addEventListener('click', e => {
 						e.preventDefault()
 						e.stopPropagation()
+						
+						console.log('🍔 Sidebar toggle clicked! Before:', sidebar.className)
 						sidebar.classList.toggle('mobile-open')
-						console.log('📱 Sidebar toggled:', sidebar.classList.contains('mobile-open'))
+						console.log('🍔 Sidebar toggle clicked! After:', sidebar.className)
+						console.log('📱 Sidebar is now:', sidebar.classList.contains('mobile-open') ? 'OPEN' : 'CLOSED')
 					})
-					
+
 					// Close sidebar when clicking outside on mobile
-					document.addEventListener('click', (e) => {
-						if (window.innerWidth <= 768 && 
-							!sidebar.contains(e.target) && 
+					document.addEventListener('click', e => {
+						if (
+							window.innerWidth <= 768 &&
+							!sidebar.contains(e.target) &&
 							!sidebarToggle.contains(e.target) &&
-							sidebar.classList.contains('mobile-open')) {
+							sidebar.classList.contains('mobile-open')
+						) {
 							sidebar.classList.remove('mobile-open')
 						}
 					})
 				}
 			}
-			
+
 			function setupGlobalErrorHandling() {
 				window.addEventListener('unhandledrejection', event => {
 					console.error('Unhandled promise rejection:', event.reason)
@@ -275,7 +287,9 @@
 					}
 
 					if (e.key === 'Escape') {
-						const modals = document.querySelectorAll('.modal.show, .dropdown.open')  
+						const modals = document.querySelectorAll(
+							'.modal.show, .dropdown.open'
+						)
 						modals.forEach(modal => {
 							modal.classList.remove('show', 'open')
 						})

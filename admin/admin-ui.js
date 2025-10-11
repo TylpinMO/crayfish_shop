@@ -7,7 +7,7 @@ class AdminUI {
 
 	init() {
 		this.bindNavigation()
-		this.bindSidebarToggle()
+		// Sidebar toggle handled in index.html
 		this.loadPage('dashboard')
 	}
 
@@ -25,25 +25,7 @@ class AdminUI {
 		})
 	}
 
-	bindSidebarToggle() {
-		const toggle = document.getElementById('sidebar-toggle')
-		const sidebar = document.querySelector('.admin-sidebar')
-
-		console.log('🍔 Admin sidebar setup:', {
-			toggle: !!toggle,
-			sidebar: !!sidebar,
-		})
-
-		if (toggle && sidebar) {
-			toggle.addEventListener('click', () => {
-				console.log('🍔 Admin sidebar toggle clicked!')
-				sidebar.classList.toggle('mobile-open')
-				console.log('🍔 Sidebar classes:', sidebar.className)
-			})
-		} else {
-			console.warn('🍔 Admin sidebar elements not found!')
-		}
-	}
+	// bindSidebarToggle moved to index.html to avoid duplicates
 
 	setActiveNavItem(activeItem) {
 		document.querySelectorAll('.nav-item').forEach(item => {
