@@ -34,7 +34,7 @@ INSERT INTO products (name, description, price, old_price, category_id, stock_qu
 
 ('Копченый лосось', 'Холодного копчения норвежский лосось. Нарезка для бутербродов.', 1800, NULL, (SELECT id FROM categories WHERE name = 'Икра и деликатесы'), 7, 0.2, 'упаковка', false, true, 'SALMON-002', 9);
 
--- 3. Добавляем изображения для товаров (с относительными путями для Netlify)
+-- 3. Добавляем изображения для товаров (с относительными путями для Vercel)
 INSERT INTO product_images (product_id, image_url, alt_text, is_primary, sort_order)
 SELECT 
   p.id,
@@ -56,7 +56,7 @@ CROSS JOIN (VALUES
 ) AS image_data(sku, image_url, alt_text)
 WHERE p.sku = image_data.sku;
 
--- 4. ИСПРАВЛЯЕМ ПУТИ ИЗОБРАЖЕНИЙ (убираем ведущие слеши для Netlify)
+-- 4. ИСПРАВЛЯЕМ ПУТИ ИЗОБРАЖЕНИЙ (убираем ведущие слеши для Vercel)
 UPDATE product_images 
 SET image_url = SUBSTRING(image_url FROM 2) 
 WHERE image_url LIKE '/%' 

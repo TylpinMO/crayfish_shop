@@ -91,6 +91,6 @@ JWT_SECRET=ваш_сгенерированный_секрет
 DADATA_TOKEN=ваш_токен_dadata (опционально)
 ```
 
-## Следующий шаг: Настройка в Netlify
+## Следующий шаг: Настройка в Vercel
 
-См. файл `SETUP_NETLIFY.md`
+См. файл `VERCEL_MIGRATION.md`

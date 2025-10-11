@@ -37,7 +37,7 @@ class ProductsManager {
 
 		try {
 			console.log('Fetching products from API...')
-			const response = await fetch('/.netlify/functions/products', {
+			const response = await fetch('/api/products', {
 				method: 'GET',
 				headers: {
 					Accept: 'application/json',

@@ -1,11 +1,12 @@
 {
-	"name": "fish-shop-netlify-functions",
+	"name": "fish-shop",
 	"version": "1.0.0",
-	"description": "Serverless functions for Fish Shop",
+	"description": "Fish shop e-commerce site with admin panel",
 	"main": "index.js",
 	"scripts": {
-		"dev": "netlify dev",
-		"build": "echo 'No build step required'"
+		"dev": "vercel dev",
+		"build": "echo 'Static site - no build needed'",
+		"start": "vercel dev"
 	},
 	"dependencies": {
 		"@supabase/supabase-js": "^2.39.0",
@@ -14,6 +15,6 @@
 		"node-fetch": "^2.6.7"
 	},
 	"devDependencies": {
-		"netlify-cli": "^15.0.0"
+		"vercel": "latest"
 	}
 }

@@ -1,4 +1,4 @@
-// Secure Admin Authentication via Netlify Functions
+// Secure Admin Authentication via Vercel API Routes
 // No database credentials exposed to client!
 
 class AdminAuth {

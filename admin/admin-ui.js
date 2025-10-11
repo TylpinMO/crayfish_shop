@@ -302,7 +302,7 @@ class AdminUI {
 
 	async loadProductsCount() {
 		try {
-			const response = await fetch('/.netlify/functions/products')
+			const response = await fetch('/api/products')
 			const data = await response.json()
 			if (data.success) {
 				console.log('📊 Admin products data:', data.products.slice(0, 2))
@@ -336,7 +336,7 @@ class AdminUI {
 		grid.innerHTML = '<div class="loading">Загрузка товаров...</div>'
 
 		try {
-			const response = await fetch('/.netlify/functions/products')
+			const response = await fetch('/api/products')
 			const data = await response.json()
 
 			if (data.success && data.products.length > 0) {

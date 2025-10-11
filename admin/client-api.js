@@ -1,9 +1,9 @@
-// Admin API через защищенные Netlify Functions
+// Admin API через защищенные Vercel API Routes
 // Никаких ключей в браузере!
 
 class AdminAPI {
 	constructor() {
-		this.baseURL = '/.netlify/functions'
+		this.baseURL = '/api'
 	}
 
 	async login(email, password) {
