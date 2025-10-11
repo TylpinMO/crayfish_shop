@@ -214,39 +214,128 @@ class FishShopApp {
 	}
 
 	/**
+	 * Toggle cart visibility
+	 */
+	toggleCart(forceClose = false) {
+		const cartSidebar = document.getElementById('cart-sidebar')
+		const cartOverlay = document.getElementById('cart-overlay')
+
+		if (!cartSidebar) {
+			console.error('Cart sidebar element not found')
+			return
+		}
+
+		const isOpen = cartSidebar.classList.contains('open')
+
+		if (forceClose || isOpen) {
+			// Close cart
+			cartSidebar.classList.remove('open')
+			cartOverlay?.classList.remove('active')
+			document.body.classList.remove('cart-open')
+			this.log('Cart closed')
+		} else {
+			// Open cart
+			cartSidebar.classList.add('open')
+			cartOverlay?.classList.add('active')
+			document.body.classList.add('cart-open')
+			this.log('Cart opened')
+		}
+
+		// Update cart content when opening
+		if (!isOpen && !forceClose) {
+			this.cart?.updateCartUI()
+		}
+	}
+
+	/**
 	 * Setup cart UI event listeners
 	 */
 	setupCartUIEvents() {
-		// Cart toggle buttons
+		// Main cart toggle button (header cart icon)
+		const cartToggleBtn = document.getElementById('cart-toggle')
+		if (cartToggleBtn) {
+			cartToggleBtn.addEventListener('click', e => {
+				e.preventDefault()
+				e.stopPropagation()
+				this.toggleCart()
+			})
+		} else {
+			console.warn('Cart toggle button not found')
+		}
+
+		// Cart toggle buttons with data attribute (if any)
 		const cartButtons = document.querySelectorAll('[data-action="toggle-cart"]')
 		cartButtons.forEach(button => {
-			button.addEventListener('click', () => {
-				const cartDrawer = document.getElementById('cart-drawer')
-				if (cartDrawer) {
-					cartDrawer.classList.toggle('open')
-				}
+			button.addEventListener('click', e => {
+				e.preventDefault()
+				e.stopPropagation()
+				this.toggleCart()
 			})
 		})
 
-		// Cart close buttons
+		// Main cart close button
+		const cartCloseBtn = document.getElementById('close-cart')
+		if (cartCloseBtn) {
+			cartCloseBtn.addEventListener('click', e => {
+				e.preventDefault()
+				e.stopPropagation()
+				this.toggleCart(true)
+			})
+		}
+
+		// Cart close buttons with data attribute (if any)
 		const closeButtons = document.querySelectorAll('[data-action="close-cart"]')
 		closeButtons.forEach(button => {
-			button.addEventListener('click', () => {
-				const cartDrawer = document.getElementById('cart-drawer')
-				if (cartDrawer) {
-					cartDrawer.classList.remove('open')
+			button.addEventListener('click', e => {
+				e.preventDefault()
+				e.stopPropagation()
+				this.toggleCart(true)
+			})
+		})
+
+		// Cart overlay click to close
+		const cartOverlay = document.getElementById('cart-overlay')
+		if (cartOverlay) {
+			cartOverlay.addEventListener('click', e => {
+				// Only close if clicked on overlay itself, not on cart content
+				if (e.target === cartOverlay) {
+					this.toggleCart(true)
+				}
+			})
+		}
+
+		// ESC key to close cart
+		document.addEventListener('keydown', e => {
+			if (e.key === 'Escape') {
+				const cartSidebar = document.getElementById('cart-sidebar')
+				if (cartSidebar && cartSidebar.classList.contains('open')) {
+					this.toggleCart(true)
+				}
+			}
+		})
+
+		// Prevent body scroll when cart is open
+		const observer = new MutationObserver(mutations => {
+			mutations.forEach(mutation => {
+				if (
+					mutation.type === 'attributes' &&
+					mutation.attributeName === 'class'
+				) {
+					const cartSidebar = document.getElementById('cart-sidebar')
+					if (cartSidebar && cartSidebar.classList.contains('open')) {
+						document.body.style.overflow = 'hidden'
+					} else {
+						document.body.style.overflow = ''
+					}
 				}
 			})
 		})
 
-		// Cart overlay click
-		const cartOverlay = document.getElementById('cart-overlay')
-		if (cartOverlay) {
-			cartOverlay.addEventListener('click', () => {
-				const cartDrawer = document.getElementById('cart-drawer')
-				if (cartDrawer) {
-					cartDrawer.classList.remove('open')
-				}
+		const cartSidebar = document.getElementById('cart-sidebar')
+		if (cartSidebar) {
+			observer.observe(cartSidebar, {
+				attributes: true,
+				attributeFilter: ['class'],
 			})
 		}
 	}

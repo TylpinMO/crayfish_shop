@@ -2186,6 +2186,11 @@ html {
 	visibility: visible;
 }
 
+/* Prevent body scroll when cart is open */
+body.cart-open {
+	overflow: hidden;
+}
+
 /* Mobile Cart Responsive */
 @media (max-width: 480px) {
 	.cart-sidebar {
