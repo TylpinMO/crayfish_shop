@@ -31,8 +31,10 @@ class FishShopApp {
 			this.cart = new ShoppingCart()
 			this.productsManager = new ProductsManager()
 
-			// Make cart globally accessible for HTML onclick handlers
+			// Make cart and productsManager globally accessible for HTML onclick handlers
 			window.cart = this.cart
+			window.productsManager = this.productsManager
+			productsManager = this.productsManager // Also assign to global variable
 
 			// Set up event listeners
 			this.setupEventListeners()
@@ -518,12 +520,39 @@ class FishShopApp {
 	}
 
 	/**
+	 * Show custom notification
+	 */
+	showNotification(message, type = 'info', duration = 3000) {
+		// Remove existing notifications
+		const existingNotifications = document.querySelectorAll('.fish-notification')
+		existingNotifications.forEach(n => n.remove())
+
+		const notification = document.createElement('div')
+		notification.className = `fish-notification fish-notification--${type}`
+		notification.innerHTML = `
+			<div class="fish-notification__content">
+				<span class="fish-notification__message">${message}</span>
+				<button class="fish-notification__close" onclick="this.parentElement.parentElement.remove()">×</button>
+			</div>
+		`
+
+		document.body.appendChild(notification)
+
+		// Auto remove after duration
+		setTimeout(() => {
+			if (notification.parentElement) {
+				notification.remove()
+			}
+		}, duration)
+	}
+
+	/**
 	 * Show checkout form
 	 */
 	showCheckoutForm() {
 		// Проверяем, что корзина не пуста
 		if (this.cart.getTotalItems() === 0) {
-			alert('Ваша корзина пуста')
+			this.showNotification('Ваша корзина пуста', 'warning')
 			return
 		}
 
@@ -573,7 +602,7 @@ class FishShopApp {
 			await new Promise(resolve => setTimeout(resolve, 1000))
 
 			// Показываем сообщение об успехе
-			alert('Заказ успешно отправлен! Мы свяжемся с вами в ближайшее время.')
+			this.showNotification('Заказ успешно отправлен! Мы свяжемся с вами в ближайшее время.', 'success', 5000)
 
 			// Очищаем корзину
 			this.cart.clear()
@@ -582,8 +611,10 @@ class FishShopApp {
 			this.toggleCart(true)
 		} catch (error) {
 			console.error('Ошибка отправки заказа:', error)
-			alert(
-				'Произошла ошибка при отправке заказа. Пожалуйста, попробуйте еще раз.'
+			this.showNotification(
+				'Произошла ошибка при отправке заказа. Пожалуйста, попробуйте еще раз.',
+				'error',
+				5000
 			)
 		} finally {
 			// Возвращаем кнопку в исходное состояние
@@ -598,6 +629,8 @@ class FishShopApp {
 
 // Global instances
 let fishShopApp
+let productsManager // Export for HTML onclick handlers
+
 // Export for testing
 if (typeof module !== 'undefined' && module.exports) {
 	module.exports = { FishShopApp, ShoppingCart, ProductsManager }

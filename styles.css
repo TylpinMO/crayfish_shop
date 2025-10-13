@@ -2639,3 +2639,86 @@ body.cart-open {
 	line-height: 1.5;
 	max-width: 400px;
 }
+
+/* ============================================= */
+/* CUSTOM NOTIFICATIONS                          */
+/* ============================================= */
+
+.fish-notification {
+	position: fixed;
+	top: 20px;
+	right: 20px;
+	z-index: 10000;
+	max-width: 400px;
+	background: white;
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-lg);
+	border-left: 4px solid var(--primary-color);
+	animation: slideInRight 0.3s ease-out;
+}
+
+.fish-notification--success {
+	border-left-color: var(--success-color);
+}
+
+.fish-notification--warning {
+	border-left-color: var(--warning-color);
+}
+
+.fish-notification--error {
+	border-left-color: #e53e3e;
+}
+
+.fish-notification__content {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 16px 20px;
+	gap: 12px;
+}
+
+.fish-notification__message {
+	color: var(--text-dark);
+	font-size: 0.9rem;
+	line-height: 1.4;
+	flex: 1;
+}
+
+.fish-notification__close {
+	background: none;
+	border: none;
+	color: var(--text-light);
+	font-size: 20px;
+	line-height: 1;
+	cursor: pointer;
+	padding: 4px;
+	border-radius: 50%;
+	transition: all 0.2s ease;
+	flex-shrink: 0;
+}
+
+.fish-notification__close:hover {
+	background: var(--bg-secondary);
+	color: var(--text-dark);
+}
+
+@keyframes slideInRight {
+	from {
+		transform: translateX(100%);
+		opacity: 0;
+	}
+	to {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+	.fish-notification {
+		top: 10px;
+		right: 10px;
+		left: 10px;
+		max-width: none;
+	}
+}
