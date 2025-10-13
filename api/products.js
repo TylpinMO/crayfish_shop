@@ -68,7 +68,7 @@ export default async function handler(req, res) {
 	}
 
 	// Set CORS headers
-	Object.entries(corsHeaders).forEach(([key, value]) => {
+	Object.entries(headers).forEach(([key, value]) => {
 		res.setHeader(key, value)
 	})
 
