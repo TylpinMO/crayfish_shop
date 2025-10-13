@@ -524,7 +524,8 @@ class FishShopApp {
 	 */
 	showNotification(message, type = 'info', duration = 3000) {
 		// Remove existing notifications
-		const existingNotifications = document.querySelectorAll('.fish-notification')
+		const existingNotifications =
+			document.querySelectorAll('.fish-notification')
 		existingNotifications.forEach(n => n.remove())
 
 		const notification = document.createElement('div')
@@ -602,7 +603,11 @@ class FishShopApp {
 			await new Promise(resolve => setTimeout(resolve, 1000))
 
 			// Показываем сообщение об успехе
-			this.showNotification('Заказ успешно отправлен! Мы свяжемся с вами в ближайшее время.', 'success', 5000)
+			this.showNotification(
+				'Заказ успешно отправлен! Мы свяжемся с вами в ближайшее время.',
+				'success',
+				5000
+			)
 
 			// Очищаем корзину
 			this.cart.clear()

@@ -186,7 +186,7 @@ class ProductsManager {
 					<img src="${product.image}" 
 						 alt="${product.name}" 
 						 loading="lazy" 
-						 onerror="this.onerror=null; this.src='/images/products/placeholder.svg'">
+						 onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDIwMCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTUwIiBmaWxsPSIjRjdGQUZDIi8+CjxwYXRoIGQ9Ik0xMDAgNzVMMTI1IDUwSDc1TDEwMCA3NVoiIGZpbGw9IiNBMEFFQzAiLz4KPHN2Zz4K'">
 					${product.isFeatured ? '<span class="featured-badge">Хит</span>' : ''}
 					${
 						!product.isInStock
@@ -207,7 +207,11 @@ class ProductsManager {
 						data-price="${product.price}"
 						data-image="${product.image}"
 						data-unit="${weightDisplay}"
-						onclick="event.stopPropagation()"
+						onclick="event.stopPropagation(); window.cart.addItem({id: ${
+							product.id
+						}, name: '${product.name.replace(/'/g, "\\'")}', price: ${
+			product.price
+		}, image: '${product.image}', unit: '${weightDisplay}'})"
 						${!product.isInStock ? 'disabled' : ''}>
 						<i class="fas fa-shopping-cart"></i>
 						${product.isInStock ? 'В корзину' : 'Нет в наличии'}
@@ -237,7 +241,7 @@ class ProductsManager {
 					<div class="modal-content">
 						<div class="modal-image">
 							<img src="${product.image}" alt="${product.name}" 
-								onerror="this.src='/images/products/placeholder.svg'">
+								onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDIwMCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTUwIiBmaWxsPSIjRjdGQUZDIi8+CjxwYXRoIGQ9Ik0xMDAgNzVMMTI1IDUwSDc1TDEwMCA3NVoiIGZpbGw9IiNBMEFFQzAiLz4KPHN2Zz4K'">
 							${product.isFeatured ? '<span class="featured-badge">Хит</span>' : ''}
 						</div>
 						<div class="modal-info">
@@ -272,6 +276,12 @@ class ProductsManager {
 								data-price="${product.price}"
 								data-image="${product.image}"
 								data-unit="${weightDisplay}"
+								onclick="window.cart.addItem({id: ${product.id}, name: '${product.name.replace(
+			/'/g,
+			"\\'"
+		)}', price: ${product.price}, image: '${
+			product.image
+		}', unit: '${weightDisplay}'}); document.getElementById('product-modal-overlay').remove()"
 								${!product.isInStock ? 'disabled' : ''}>
 								<i class="fas fa-shopping-cart"></i>
 								${product.isInStock ? 'Добавить в корзину' : 'Нет в наличии'}
