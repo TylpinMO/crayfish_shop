@@ -47,6 +47,13 @@ const headers = {
 export default async function handler(req, res) {
 	const startTime = Date.now()
 
+	// Debug logging
+	console.log('🔧 API Handler started')
+	console.log('📊 Environment check:', {
+		supabaseUrl: process.env.SUPABASE_URL ? 'SET' : 'MISSING',
+		serviceKey: process.env.SUPABASE_SERVICE_KEY ? 'SET' : 'MISSING',
+	})
+
 	// Handle CORS preflight
 	if (req.method === 'OPTIONS') {
 		return res.status(200).json({})
@@ -95,7 +102,8 @@ export default async function handler(req, res) {
 	}
 
 	try {
-		console.log('Fetching products from database...')
+		console.log('🗄️ Fetching products from database...')
+		console.log('🔗 Supabase client created successfully')
 
 		// Get all active products with categories (simplified structure)
 		const { data: products, error } = await supabase
@@ -122,10 +130,12 @@ export default async function handler(req, res) {
 			.order('name', { ascending: true })
 
 		if (error) {
-			console.error('Supabase query error:', error)
+			console.error('❌ Supabase query error:', error)
+			console.error('❌ Error details:', JSON.stringify(error, null, 2))
 			return res.status(500).json({
 				error: 'Database query failed',
 				details: error.message,
+				code: error.code,
 			})
 		}
 
@@ -232,6 +242,7 @@ export default async function handler(req, res) {
  */
 async function getCategories() {
 	try {
+		console.log('🏷️ Fetching categories from database...')
 		const { data: categories, error } = await supabase
 			.from('categories')
 			.select(
@@ -246,9 +257,15 @@ async function getCategories() {
 			.order('sort_order', { ascending: true })
 
 		if (error) {
-			console.error('Categories query error:', error)
+			console.error('❌ Categories query error:', error)
+			console.error(
+				'❌ Categories error details:',
+				JSON.stringify(error, null, 2)
+			)
 			return []
 		}
+
+		console.log(`✅ Found ${categories?.length || 0} categories`)
 
 		// Add "Все" category at the beginning
 		const allCategories = [
