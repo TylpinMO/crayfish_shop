@@ -1,12 +1,13 @@
 /**
  * Public Products API - Vercel Serverless Function
- * Migrated from Netlify Functions
+ * Simplified version for INTEGER ID structure
  */
 
 const { createClient } = require('@supabase/supabase-js')
 
 // Cache for products data (in-memory, 5 min TTL)
 let productsCache = null
+let categoriesCache = null
 let cacheTimestamp = 0
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
@@ -23,29 +24,13 @@ const supabase = createClient(
 )
 
 /**
- * Get Supabase Storage public URL for image
+ * Normalize image URL for display
  */
-function getStorageImageUrl(storagePath, publicUrl) {
-	if (publicUrl && publicUrl.startsWith('http')) {
-		return publicUrl
-	}
-
-	if (storagePath) {
-		return `${process.env.SUPABASE_URL}/storage/v1/object/public/product-images/${storagePath}`
-	}
-
-	return `${process.env.SUPABASE_URL}/storage/v1/object/public/product-images/placeholders/fish-placeholder.svg`
-}
-
 function normalizeImageUrl(imageUrl) {
-	if (!imageUrl) return 'images/fish-placeholder.svg'
-	if (imageUrl.startsWith('/')) {
-		return imageUrl.substring(1)
-	}
-	if (!imageUrl.trim()) {
-		return 'images/fish-placeholder.svg'
-	}
-	return imageUrl
+	if (!imageUrl) return '/images/products/placeholder.svg'
+	if (imageUrl.startsWith('/')) return imageUrl
+	if (imageUrl.startsWith('http')) return imageUrl
+	return `/images/products/${imageUrl}`
 }
 
 // CORS headers
@@ -75,6 +60,31 @@ export default async function handler(req, res) {
 		})
 	}
 
+	// Set CORS headers
+	Object.entries(corsHeaders).forEach(([key, value]) => {
+		res.setHeader(key, value)
+	})
+
+	const { type } = req.query
+
+	// Handle categories request
+	if (type === 'categories') {
+		try {
+			const categories = await getCategories()
+			return res.status(200).json({
+				success: true,
+				data: categories,
+				timestamp: new Date().toISOString(),
+			})
+		} catch (error) {
+			console.error('Categories API error:', error)
+			return res.status(500).json({
+				error: 'Failed to fetch categories',
+				timestamp: new Date().toISOString(),
+			})
+		}
+	}
+
 	// Check cache first
 	const now = Date.now()
 	if (productsCache && now - cacheTimestamp < CACHE_TTL) {
@@ -87,7 +97,7 @@ export default async function handler(req, res) {
 	try {
 		console.log('Fetching products from database...')
 
-		// Get all active products with categories and images
+		// Get all active products with categories (simplified structure)
 		const { data: products, error } = await supabase
 			.from('products')
 			.select(
@@ -96,31 +106,20 @@ export default async function handler(req, res) {
 				name,
 				description,
 				price,
-				old_price,
+				category_id,
+				image_url,
 				stock_quantity,
 				weight,
 				unit,
 				is_featured,
-				sort_order,
 				categories (
 					id,
 					name
-				),
-				product_images (
-					id,
-					image_url,
-					alt_text,
-					is_primary,
-					storage_bucket,
-					storage_path,
-					public_url,
-					mime_type,
-					file_size
 				)
 			`
 			)
 			.eq('is_active', true)
-			.order('sort_order', { ascending: true })
+			.order('name', { ascending: true })
 
 		if (error) {
 			console.error('Supabase query error:', error)
@@ -148,29 +147,8 @@ export default async function handler(req, res) {
 			.filter(product => product && product.name)
 			.map(product => {
 				try {
-					const primaryImage =
-						product.product_images?.find(img => img.is_primary) ||
-						product.product_images?.[0]
 					const categoryName = product.categories?.name || 'Товары'
-
-					// Get image URL - priority: public_url > storage_path > image_url (fallback for old data)
-					let imageUrl = 'images/fish-placeholder.svg' // default fallback
-
-					if (primaryImage) {
-						if (
-							primaryImage.public_url &&
-							primaryImage.public_url.startsWith('http')
-						) {
-							imageUrl = primaryImage.public_url
-						} else if (primaryImage.storage_path) {
-							imageUrl = getStorageImageUrl(
-								primaryImage.storage_path,
-								primaryImage.public_url
-							)
-						} else if (primaryImage.image_url) {
-							imageUrl = normalizeImageUrl(primaryImage.image_url)
-						}
-					}
+					const imageUrl = normalizeImageUrl(product.image_url)
 
 					if (!product.name || typeof product.price !== 'number') {
 						console.warn(`Invalid product data:`, {
@@ -188,11 +166,10 @@ export default async function handler(req, res) {
 							? String(product.description).trim()
 							: '',
 						price: Number(product.price),
-						oldPrice: product.old_price ? Number(product.old_price) : null,
 						category: categoryName,
-						categoryId: product.categories?.id,
+						categoryId: product.category_id,
 						image: imageUrl,
-						imageAlt: primaryImage?.alt_text || product.name,
+						imageAlt: product.name,
 						stockQuantity: Number(product.stock_quantity) || 0,
 						weight: Number(product.weight) || 0,
 						unit: String(product.unit || 'шт').trim(),
@@ -247,5 +224,54 @@ export default async function handler(req, res) {
 			error: error.message || 'Internal server error',
 			timestamp: new Date().toISOString(),
 		})
+	}
+}
+
+/**
+ * Get categories with product counts
+ */
+async function getCategories() {
+	try {
+		const { data: categories, error } = await supabase
+			.from('categories')
+			.select(
+				`
+				id,
+				name,
+				description,
+				products (count)
+			`
+			)
+			.eq('is_active', true)
+			.order('sort_order', { ascending: true })
+
+		if (error) {
+			console.error('Categories query error:', error)
+			return []
+		}
+
+		// Add "Все" category at the beginning
+		const allCategories = [
+			{
+				id: 0,
+				name: 'Все',
+				description: 'Все товары',
+				productCount: categories.reduce(
+					(sum, cat) => sum + (cat.products?.[0]?.count || 0),
+					0
+				),
+			},
+			...categories.map(cat => ({
+				id: cat.id,
+				name: cat.name,
+				description: cat.description,
+				productCount: cat.products?.[0]?.count || 0,
+			})),
+		]
+
+		return allCategories
+	} catch (error) {
+		console.error('Error fetching categories:', error)
+		return []
 	}
 }

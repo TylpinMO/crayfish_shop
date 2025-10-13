@@ -231,22 +231,25 @@
 				// Mobile sidebar toggle
 				const sidebarToggle = document.getElementById('sidebar-toggle')
 				const sidebar = document.querySelector('.admin-sidebar')
-				
+
 				console.log('🍔 Setting up sidebar toggle:', {
 					toggle: !!sidebarToggle,
 					sidebar: !!sidebar,
-					sidebarClasses: sidebar?.className
+					sidebarClasses: sidebar?.className,
 				})
-				
+
 				if (sidebarToggle && sidebar) {
 					sidebarToggle.addEventListener('click', e => {
 						e.preventDefault()
 						e.stopPropagation()
-						
+
 						console.log('🍔 Sidebar toggle clicked! Before:', sidebar.className)
 						sidebar.classList.toggle('mobile-open')
 						console.log('🍔 Sidebar toggle clicked! After:', sidebar.className)
-						console.log('📱 Sidebar is now:', sidebar.classList.contains('mobile-open') ? 'OPEN' : 'CLOSED')
+						console.log(
+							'📱 Sidebar is now:',
+							sidebar.classList.contains('mobile-open') ? 'OPEN' : 'CLOSED'
+						)
 					})
 
 					// Close sidebar when clicking outside on mobile
