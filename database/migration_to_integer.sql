@@ -46,6 +46,19 @@ CREATE TABLE products (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Администраторы
+CREATE TABLE admin_users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    full_name VARCHAR(255) NOT NULL,
+    role VARCHAR(50) DEFAULT 'admin',
+    is_active BOOLEAN DEFAULT true,
+    last_login TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- 5. Индексы для производительности
 CREATE INDEX idx_products_category ON products(category_id);
 CREATE INDEX idx_products_active ON products(is_active);
@@ -68,22 +81,56 @@ CREATE TRIGGER update_categories_updated_at BEFORE UPDATE ON categories
 CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON products
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- 8. Базовые категории
+CREATE TRIGGER update_admin_users_updated_at BEFORE UPDATE ON admin_users
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- 8. Настройка Row Level Security (RLS)
+ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
+
+-- Политики RLS для публичного доступа к товарам
+CREATE POLICY "Public can read active categories" ON categories
+    FOR SELECT USING (is_active = true);
+
+CREATE POLICY "Public can read active products" ON products
+    FOR SELECT USING (is_active = true);
+
+-- Политики RLS для админов (только через service key)
+CREATE POLICY "Service role can manage categories" ON categories
+    FOR ALL USING (auth.role() = 'service_role');
+
+CREATE POLICY "Service role can manage products" ON products
+    FOR ALL USING (auth.role() = 'service_role');
+
+CREATE POLICY "Service role can manage admin_users" ON admin_users
+    FOR ALL USING (auth.role() = 'service_role');
+
+-- 9. Базовые категории
 INSERT INTO categories (name, description, sort_order) VALUES
 ('Рыба', 'Свежая и копченая рыба', 1),
 ('Рак', 'Речные раки живые и вареные', 2),
 ('Сыр', 'Сыры различных сортов', 3);
 
--- 9. Комментарии к таблицам
+-- 10. Создание админа по умолчанию
+-- Пароль: admin123 (хеш сгенерирован с bcrypt, rounds=12)
+INSERT INTO admin_users (email, password_hash, full_name, role, is_active) VALUES
+('admin@fish-shop.ru', '$2a$12$rGOEKO8Qj8VKjJXRYF.vXOc8nHp1qHG2.tYrXKYQXzqHxP2RbYUMO', 'Администратор', 'admin', true);
+
+-- 11. Комментарии к таблицам
 COMMENT ON TABLE categories IS 'Категории товаров';
 COMMENT ON TABLE products IS 'Товары интернет-магазина';
+COMMENT ON TABLE admin_users IS 'Администраторы системы';
 
 COMMENT ON COLUMN products.price IS 'Цена за единицу товара';
 COMMENT ON COLUMN products.weight IS 'Вес товара в кг';
 COMMENT ON COLUMN products.unit IS 'Единица измерения: кг, шт, упак';
 COMMENT ON COLUMN products.image_url IS 'URL изображения товара';
+COMMENT ON COLUMN admin_users.password_hash IS 'Хеш пароля (bcrypt)';
 
--- 10. Проверяем результат
+-- 12. Проверяем результат
 SELECT 'Миграция завершена!' as status;
 SELECT 'Созданные категории:' as info;
 SELECT id, name, description FROM categories ORDER BY sort_order;
+SELECT 'Создан админ:' as admin_info;
+SELECT id, email, full_name, role, is_active FROM admin_users;
