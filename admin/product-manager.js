@@ -56,15 +56,9 @@ class ProductManager {
 								<label for="product-category">Категория *</label>
 								<select id="product-category" name="category_id" required>
 									<option value="">Выберите категорию</option>
-									<option value="1" ${product?.category_id === 1 ? 'selected' : ''}>Раки</option>
-									<option value="2" ${
-										product?.category_id === 2 ? 'selected' : ''
-									}>Креветки</option>
-									<option value="3" ${product?.category_id === 3 ? 'selected' : ''}>Крабы</option>
-									<option value="4" ${product?.category_id === 4 ? 'selected' : ''}>Икра</option>
-									<option value="5" ${
-										product?.category_id === 5 ? 'selected' : ''
-									}>Морепродукты</option>
+									<option value="1" ${product?.category_id === 1 ? 'selected' : ''}>Рыба</option>
+									<option value="2" ${product?.category_id === 2 ? 'selected' : ''}>Рак</option>
+									<option value="3" ${product?.category_id === 3 ? 'selected' : ''}>Сыр</option>
 								</select>
 							</div>
 						</div>
@@ -84,10 +78,10 @@ class ProductManager {
 								}" step="0.01" min="0" required>
 							</div>
 							<div class="form-group">
-								<label for="product-old-price">Старая цена (₽)</label>
-								<input type="number" id="product-old-price" name="old_price" value="${
-									product?.old_price || ''
-								}" step="0.01" min="0">
+								<label for="product-stock">Остаток на складе *</label>
+								<input type="number" id="product-stock" name="stock_quantity" value="${
+									product?.stock_quantity || ''
+								}" min="0" required>
 							</div>
 						</div>
 						
@@ -102,26 +96,18 @@ class ProductManager {
 								<label for="product-unit">Единица измерения</label>
 								<select id="product-unit" name="unit">
 									<option value="кг" ${product?.unit === 'кг' ? 'selected' : ''}>кг</option>
-									<option value="г" ${product?.unit === 'г' ? 'selected' : ''}>г</option>
 									<option value="шт" ${product?.unit === 'шт' ? 'selected' : ''}>шт</option>
-									<option value="л" ${product?.unit === 'л' ? 'selected' : ''}>л</option>
+									<option value="упак" ${product?.unit === 'упак' ? 'selected' : ''}>упак</option>
 								</select>
 							</div>
 						</div>
 						
-						<div class="form-row">
-							<div class="form-group">
-								<label for="product-stock">Остаток на складе *</label>
-								<input type="number" id="product-stock" name="stock_quantity" value="${
-									product?.stock_quantity || ''
-								}" min="0" required>
-							</div>
-							<div class="form-group">
-								<label for="product-sort">Порядок сортировки</label>
-								<input type="number" id="product-sort" name="sort_order" value="${
-									product?.sort_order || 0
-								}" min="0">
-							</div>
+						<div class="form-group">
+							<label for="product-image">URL изображения</label>
+							<input type="url" id="product-image" name="image_url" value="${
+								product?.image_url || ''
+							}" placeholder="/images/products/product-1.svg">
+							<small>Например: /images/products/fish-1.svg</small>
 						</div>
 						
 						<div class="form-row">
@@ -176,13 +162,10 @@ class ProductManager {
 			name: formData.get('name'),
 			description: formData.get('description'),
 			price: parseFloat(formData.get('price')),
-			old_price: formData.get('old_price')
-				? parseFloat(formData.get('old_price'))
-				: null,
 			weight: parseFloat(formData.get('weight')),
 			unit: formData.get('unit'),
 			stock_quantity: parseInt(formData.get('stock_quantity')),
-			sort_order: parseInt(formData.get('sort_order') || 0),
+			image_url: formData.get('image_url'),
 			is_featured: formData.has('is_featured'),
 			is_active: formData.has('is_active'),
 			category_id: parseInt(formData.get('category_id')),

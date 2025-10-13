@@ -174,21 +174,22 @@ class ProductsManager {
 	 * Render single product card
 	 */
 	renderProductCard(product) {
-		const priceDisplay = product.oldPrice
-			? `<span class="price">${product.price.toLocaleString()} ₽</span>
-			 <span class="old-price">${product.oldPrice.toLocaleString()} ₽</span>`
-			: `<span class="price">${product.price.toLocaleString()} ₽</span>`
+		const weightDisplay = product.weight
+			? `${product.weight} ${product.unit}`
+			: product.unit
 
 		return `
-			<div class="product-card" data-id="${product.id}">
+			<div class="product-card" data-id="${
+				product.id
+			}" onclick="productsManager.showProductModal(${product.id})">
 				<div class="product-image">
 					<img src="${product.image}" 
 						 alt="${product.name}" 
 						 loading="lazy" 
-						 onerror="this.onerror=null; this.src='images/fish-placeholder.svg'">
-					${product.isFeatured ? '<span class="featured-badge">Хит продаж</span>' : ''}
+						 onerror="this.onerror=null; this.src='/images/products/placeholder.svg'">
+					${product.isFeatured ? '<span class="featured-badge">Хит</span>' : ''}
 					${
-						!product.inStock
+						!product.isInStock
 							? '<span class="out-of-stock-badge">Нет в наличии</span>'
 							: ''
 					}
@@ -196,24 +197,101 @@ class ProductsManager {
 				<div class="product-info">
 					<div class="product-category">${product.category}</div>
 					<h3>${product.name}</h3>
-					<p class="product-description">${product.description || ''}</p>
 					<div class="product-price">
-						${priceDisplay}
-						<span class="unit">за ${product.unit}</span>
+						<span class="price">${product.price.toLocaleString()} ₽</span>
+						<span class="unit">за ${weightDisplay}</span>
 					</div>
 					<button class="add-to-cart btn btn-primary" 
 						data-id="${product.id}"
 						data-name="${product.name}"
 						data-price="${product.price}"
 						data-image="${product.image}"
-						data-unit="${product.unit}"
-						${!product.inStock ? 'disabled' : ''}>
+						data-unit="${weightDisplay}"
+						onclick="event.stopPropagation()"
+						${!product.isInStock ? 'disabled' : ''}>
 						<i class="fas fa-shopping-cart"></i>
-						${product.inStock ? 'В корзину' : 'Нет в наличии'}
+						${product.isInStock ? 'В корзину' : 'Нет в наличии'}
 					</button>
 				</div>
 			</div>
 		`
+	}
+
+	/**
+	 * Show product modal with full description
+	 */
+	showProductModal(productId) {
+		const product = this.products.find(p => p.id == productId)
+		if (!product) return
+
+		const weightDisplay = product.weight
+			? `${product.weight} ${product.unit}`
+			: product.unit
+
+		const modalHTML = `
+			<div class="product-modal-overlay" id="product-modal-overlay" onclick="this.remove()">
+				<div class="product-modal" onclick="event.stopPropagation()">
+					<button class="modal-close" onclick="document.getElementById('product-modal-overlay').remove()">
+						<i class="fas fa-times"></i>
+					</button>
+					<div class="modal-content">
+						<div class="modal-image">
+							<img src="${product.image}" alt="${product.name}" 
+								onerror="this.src='/images/products/placeholder.svg'">
+							${product.isFeatured ? '<span class="featured-badge">Хит</span>' : ''}
+						</div>
+						<div class="modal-info">
+							<div class="product-category">${product.category}</div>
+							<h2>${product.name}</h2>
+							<div class="product-description">
+								${product.description || 'Описание товара отсутствует'}
+							</div>
+							<div class="product-details">
+								<div class="detail-row">
+									<span>Вес/количество:</span>
+									<span>${weightDisplay}</span>
+								</div>
+								<div class="detail-row">
+									<span>Наличие:</span>
+									<span class="${product.isInStock ? 'in-stock' : 'out-of-stock'}">
+										${
+											product.isInStock
+												? `В наличии (${product.stockQuantity} шт)`
+												: 'Нет в наличии'
+										}
+									</span>
+								</div>
+							</div>
+							<div class="modal-price">
+								<span class="price">${product.price.toLocaleString()} ₽</span>
+								<span class="unit">за ${weightDisplay}</span>
+							</div>
+							<button class="add-to-cart btn btn-primary btn-large" 
+								data-id="${product.id}"
+								data-name="${product.name}"
+								data-price="${product.price}"
+								data-image="${product.image}"
+								data-unit="${weightDisplay}"
+								${!product.isInStock ? 'disabled' : ''}>
+								<i class="fas fa-shopping-cart"></i>
+								${product.isInStock ? 'Добавить в корзину' : 'Нет в наличии'}
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		`
+
+		document.body.insertAdjacentHTML('beforeend', modalHTML)
+
+		// Add escape key handler
+		const handleEscape = e => {
+			if (e.key === 'Escape') {
+				document.getElementById('product-modal-overlay')?.remove()
+				document.removeEventListener('keydown', handleEscape)
+			}
+		}
+		document.addEventListener('keydown', handleEscape)
 	}
 
 	/**
@@ -284,24 +362,24 @@ class ProductsManager {
 	 */
 	async loadCategoryFilters() {
 		try {
-			// Try to get categories from API
-			const response = await fetch('/api/admin-api?action=categories')
+			console.log('Loading categories from API...')
+			// Get categories from new API endpoint
+			const response = await fetch('/api/products?type=categories')
 			if (response.ok) {
 				const data = await response.json()
-				if (data.success && data.categories) {
-					this.categories = data.categories
+				if (data.success && data.data) {
+					this.categories = data.data
+					console.log('Categories loaded:', this.categories)
 				}
 			}
 		} catch (error) {
 			console.log('Could not load categories from API, using fallback')
-			// Use fallback categories if API fails
+			// Use fallback categories if API fails (new structure)
 			this.categories = [
-				{ id: 1, name: 'Раки' },
-				{ id: 2, name: 'Креветки' },
-				{ id: 3, name: 'Крабы' },
-				{ id: 4, name: 'Икра' },
-				{ id: 5, name: 'Рыба' },
-				{ id: 6, name: 'Морепродукты' },
+				{ id: 0, name: 'Все', productCount: 0 },
+				{ id: 1, name: 'Рыба', productCount: 0 },
+				{ id: 2, name: 'Рак', productCount: 0 },
+				{ id: 3, name: 'Сыр', productCount: 0 },
 			]
 		}
 
@@ -313,28 +391,42 @@ class ProductsManager {
 	 */
 	renderCategoryFilters() {
 		const filtersContainer = document.getElementById('category-filters')
-		if (!filtersContainer) return
+		if (!filtersContainer) {
+			console.warn('Category filters container not found')
+			return
+		}
 
-		// Keep "All products" button and add categories
+		// Render all categories including "Все"
 		const categoryButtons = this.categories
 			.map(
 				category => `
-			<button class="category-btn" data-category="${category.id}">
-				<i class="fas fa-tag"></i>
-				${category.name}
-			</button>
-		`
+				<button class="category-btn ${
+					category.id === 0 ? 'active' : ''
+				}" data-category="${category.id}">
+					<i class="fas fa-${this.getCategoryIcon(category.name)}"></i>
+					${category.name}
+				</button>
+			`
 			)
 			.join('')
 
-		// Add category buttons after "All products" button
-		const allButton = filtersContainer.querySelector('[data-category="all"]')
-		if (allButton) {
-			allButton.insertAdjacentHTML('afterend', categoryButtons)
-		}
+		filtersContainer.innerHTML = categoryButtons
 
 		// Bind click events
 		this.bindCategoryFilters()
+	}
+
+	/**
+	 * Get icon for category
+	 */
+	getCategoryIcon(categoryName) {
+		const icons = {
+			Все: 'th-large',
+			Рыба: 'fish',
+			Рак: 'shrimp',
+			Сыр: 'cheese',
+		}
+		return icons[categoryName] || 'tag'
 	}
 
 	/**
@@ -361,12 +453,15 @@ class ProductsManager {
 	 * Filter products by category
 	 */
 	filterProductsByCategory(categoryId) {
-		if (categoryId === 'all') {
+		console.log('Filtering by category:', categoryId)
+
+		if (categoryId == 0 || categoryId === 'all') {
+			// Show all products
 			this.updateUI(this.products)
 		} else {
+			// Filter by specific category
 			const filteredProducts = this.products.filter(
-				product =>
-					product.category_id == categoryId || product.categoryId == categoryId
+				product => product.categoryId == categoryId
 			)
 			this.updateUI(filteredProducts)
 		}
