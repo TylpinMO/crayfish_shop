@@ -1175,17 +1175,17 @@ html {
 		max-width: 95%;
 		max-height: 95vh;
 	}
-	
+
 	.modal-content {
 		grid-template-columns: 1fr;
 		gap: 20px;
 		padding: 20px;
 	}
-	
+
 	.modal-image img {
 		height: 250px;
 	}
-	
+
 	.modal-info h2 {
 		font-size: 1.5rem;
 	}
