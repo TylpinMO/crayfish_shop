@@ -166,6 +166,14 @@ class FishShopApp {
 			// Add to cart
 			this.cart.addItem(product)
 
+			// Close modal if this button is in a modal
+			if (button.dataset.closeModal === 'true') {
+				const modalOverlay = document.getElementById('product-modal-overlay')
+				if (modalOverlay) {
+					modalOverlay.remove()
+				}
+			}
+
 			// Show success animation
 			this.showAddToCartSuccess(button)
 		} catch (error) {
@@ -445,31 +453,136 @@ class FishShopApp {
 	}
 
 	/**
-	 * Initialize address autocomplete
+	 * Initialize address autocomplete with DaData
 	 */
 	initAddressAutocomplete() {
 		const addressInput = document.getElementById('address-input')
 		const addressSuggestions = document.getElementById('address-suggestions')
 
 		if (addressInput && addressSuggestions) {
-			// TODO: Implement AddressAutocomplete class
-			console.log('Address autocomplete placeholder - implement when needed')
+			let timeoutId
 
-			// Simple fallback for now
+			console.log('🏠 Setting up DaData address autocomplete')
+
 			addressInput.addEventListener('input', e => {
-				const value = e.target.value.trim()
-				if (value.length > 2) {
-					addressSuggestions.innerHTML = `
-						<div class="suggestion-item">
-							<i class="fas fa-map-marker-alt"></i>
-							${value} (демо - автодополнение отключено)
-						</div>
-					`
-				} else {
+				const query = e.target.value.trim()
+
+				if (timeoutId) {
+					clearTimeout(timeoutId)
+				}
+
+				if (query.length < 3) {
 					addressSuggestions.innerHTML = ''
+					addressSuggestions.style.display = 'none'
+					return
+				}
+
+				// Debounce API calls
+				timeoutId = setTimeout(() => {
+					this.fetchAddressSuggestions(query, addressSuggestions)
+				}, 300)
+			})
+
+			// Hide suggestions when clicking outside
+			document.addEventListener('click', e => {
+				if (
+					!addressInput.contains(e.target) &&
+					!addressSuggestions.contains(e.target)
+				) {
+					addressSuggestions.style.display = 'none'
 				}
 			})
 		}
+	}
+
+	/**
+	 * Fetch address suggestions from DaData
+	 */
+	async fetchAddressSuggestions(query, suggestionsContainer) {
+		const url =
+			'https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address'
+		const token = '0a5759487c07fc6dc5a65061d8df9df8648e1adb'
+
+		const options = {
+			method: 'POST',
+			mode: 'cors',
+			headers: {
+				'Content-Type': 'application/json',
+				Accept: 'application/json',
+				Authorization: 'Token ' + token,
+			},
+			body: JSON.stringify({ query: query }),
+		}
+
+		try {
+			console.log('🔍 Fetching address suggestions for:', query)
+
+			const response = await fetch(url, options)
+
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+			}
+
+			const result = await response.json()
+			console.log('📍 DaData response:', result)
+
+			if (result.suggestions && result.suggestions.length > 0) {
+				this.displayAddressSuggestions(result.suggestions, suggestionsContainer)
+			} else {
+				suggestionsContainer.innerHTML =
+					'<div class="suggestion-item">Адрес не найден</div>'
+				suggestionsContainer.style.display = 'block'
+			}
+		} catch (error) {
+			console.error('❌ DaData error:', error)
+			suggestionsContainer.innerHTML = `
+				<div class="suggestion-item error">
+					<i class="fas fa-exclamation-triangle"></i>
+					Ошибка загрузки подсказок
+				</div>
+			`
+			suggestionsContainer.style.display = 'block'
+		}
+	}
+
+	/**
+	 * Display address suggestions
+	 */
+	displayAddressSuggestions(suggestions, container) {
+		const addressInput = document.getElementById('address-input')
+
+		const html = suggestions
+			.slice(0, 5)
+			.map(
+				suggestion => `
+			<div class="suggestion-item" onclick="this.selectAddress('${
+				suggestion.value
+			}')">
+				<i class="fas fa-map-marker-alt"></i>
+				<div class="suggestion-content">
+					<div class="suggestion-value">${suggestion.value}</div>
+					${
+						suggestion.data.city
+							? `<div class="suggestion-city">${suggestion.data.city}</div>`
+							: ''
+					}
+				</div>
+			</div>
+		`
+			)
+			.join('')
+
+		container.innerHTML = html
+		container.style.display = 'block'
+
+		// Add click handlers
+		container.querySelectorAll('.suggestion-item').forEach(item => {
+			item.addEventListener('click', () => {
+				const value = item.querySelector('.suggestion-value').textContent
+				addressInput.value = value
+				container.style.display = 'none'
+			})
+		})
 	}
 
 	/**

@@ -207,11 +207,6 @@ class ProductsManager {
 						data-price="${product.price}"
 						data-image="${product.image}"
 						data-unit="${weightDisplay}"
-						onclick="event.stopPropagation(); window.cart.addItem({id: ${
-							product.id
-						}, name: '${product.name.replace(/'/g, "\\'")}', price: ${
-			product.price
-		}, image: '${product.image}', unit: '${weightDisplay}'})"
 						${!product.isInStock ? 'disabled' : ''}>
 						<i class="fas fa-shopping-cart"></i>
 						${product.isInStock ? 'В корзину' : 'Нет в наличии'}
@@ -255,16 +250,6 @@ class ProductsManager {
 									<span>Вес/количество:</span>
 									<span>${weightDisplay}</span>
 								</div>
-								<div class="detail-row">
-									<span>Наличие:</span>
-									<span class="${product.isInStock ? 'in-stock' : 'out-of-stock'}">
-										${
-											product.isInStock
-												? `В наличии (${product.stockQuantity} шт)`
-												: 'Нет в наличии'
-										}
-									</span>
-								</div>
 							</div>
 							<div class="modal-price">
 								<span class="price">${product.price.toLocaleString()} ₽</span>
@@ -276,12 +261,7 @@ class ProductsManager {
 								data-price="${product.price}"
 								data-image="${product.image}"
 								data-unit="${weightDisplay}"
-								onclick="window.cart.addItem({id: ${product.id}, name: '${product.name.replace(
-			/'/g,
-			"\\'"
-		)}', price: ${product.price}, image: '${
-			product.image
-		}', unit: '${weightDisplay}'}); document.getElementById('product-modal-overlay').remove()"
+								data-close-modal="true"
 								${!product.isInStock ? 'disabled' : ''}>
 								<i class="fas fa-shopping-cart"></i>
 								${product.isInStock ? 'Добавить в корзину' : 'Нет в наличии'}
